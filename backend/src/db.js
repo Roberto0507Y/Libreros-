@@ -1,22 +1,38 @@
-import mysql from 'mysql2'
-import dotenv from 'dotenv'
+import mysql from 'mysql2/promise';
 
-dotenv.config(); 
+import config from './config.js';
 
-const mysql = mysql(
-    process.env.DB_NAME,
-    process.env.DB_USER,
-    process.env.DB_PASS,
-    {
-        host: process.env.DB_HOST || 'localhost',
-        dialect: 'mysql',
-        logging: false,
+const pool = mysql.createPool(config.db);
 
-    }
-);
+export const testConnection = async () => {
+  const connection = await pool.getConnection();
 
-mysql.authenticaticate()
-    .then(() => console.log('Conexion establecida'))
-    .catch(err => console.error('Error al conetar'))
+  try {
+    await connection.ping();
+  } finally {
+    connection.release();
+  }
+};
 
-export default mysql;
+export const query = async (sql, params = []) => {
+  const [rows] = await pool.execute(sql, params);
+  return rows;
+};
+
+export const withTransaction = async (callback) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const result = await callback(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+};
+
+export default pool;
