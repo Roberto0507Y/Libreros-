@@ -2,9 +2,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const parseOrigins = (value) => {
+const DEFAULT_FRONTEND_URL = 'http://localhost:5173';
+
+const parseOrigins = (value, fallbackOrigin) => {
   if (!value) {
-    return ['http://localhost:5173'];
+    return [fallbackOrigin];
   }
 
   return value
@@ -32,11 +34,14 @@ const config = {
     expiresIn: process.env.JWT_EXPIRES_IN ?? '8h',
     passwordResetExpiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 60),
   },
-  cors: {
-    origins: parseOrigins(process.env.CORS_ORIGIN),
-  },
   app: {
-    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+    frontendUrl: process.env.FRONTEND_URL ?? DEFAULT_FRONTEND_URL,
+  },
+  cors: {
+    origins: parseOrigins(
+      process.env.CORS_ORIGIN,
+      process.env.FRONTEND_URL ?? DEFAULT_FRONTEND_URL,
+    ),
   },
   aws: {
     region: process.env.AWS_REGION ?? '',
