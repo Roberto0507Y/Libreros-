@@ -225,19 +225,31 @@ export function SaleCreatePage({
         label: 'Productos visibles',
         value: filteredProducts.length,
         icon: LayoutGrid,
-        tone: 'bg-blue-600 text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)]',
+        tone:
+          'border border-blue-100/70 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(219,234,254,0.14))] text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-md',
+        iconTone:
+          'bg-[linear-gradient(135deg,rgba(30,58,138,0.9),rgba(37,99,235,0.95))] text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)]',
+        labelTone: 'text-blue-100/90',
       },
       {
         label: 'En carrito',
         value: unitsInCart,
         icon: ShoppingBasket,
-        tone: 'bg-emerald-500 text-white shadow-[0_18px_36px_rgba(16,185,129,0.24)]',
+        tone:
+          'border border-emerald-100/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(209,250,229,0.14))] text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-md',
+        iconTone:
+          'bg-[linear-gradient(135deg,rgba(5,150,105,0.9),rgba(16,185,129,0.95))] text-white shadow-[0_14px_28px_rgba(16,185,129,0.2)]',
+        labelTone: 'text-emerald-100/90',
       },
       {
         label: 'Total estimado',
         value: currency.format(total),
         icon: BadgeDollarSign,
-        tone: 'bg-amber-500 text-white shadow-[0_18px_36px_rgba(245,158,11,0.26)]',
+        tone:
+          'border border-amber-100/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(255,251,235,0.14))] text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)] backdrop-blur-md',
+        iconTone:
+          'bg-[linear-gradient(135deg,rgba(245,158,11,0.9),rgba(249,115,22,0.95))] text-white shadow-[0_14px_28px_rgba(249,115,22,0.18)]',
+        labelTone: 'text-amber-100/90',
       },
     ],
     [filteredProducts.length, total, unitsInCart],
@@ -495,12 +507,8 @@ export function SaleCreatePage({
               Punto de venta
             </div>
             <h2 className="mt-5 text-3xl font-black tracking-tight text-white md:text-4xl">
-              Registra ventas presenciales como un POS moderno
+              Registro de ventas en caja
             </h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100/90 md:text-base">
-              Cobra más rápido, agrega productos con un toque y finaliza la venta con un checkout
-              guiado para caja, cliente y forma de pago.
-            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
@@ -508,12 +516,14 @@ export function SaleCreatePage({
               const Icon = stat.icon;
 
               return (
-                <article className={`rounded-[24px] px-4 py-4 ${stat.tone}`} key={stat.label}>
+                <article className={`rounded-[24px] px-4 py-4 transition hover:-translate-y-0.5 ${stat.tone}`} key={stat.label}>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-semibold uppercase tracking-[0.18em] opacity-90">
+                    <span className={`text-xs font-semibold uppercase tracking-[0.18em] ${stat.labelTone}`}>
                       {stat.label}
                     </span>
-                    <Icon className="h-4 w-4 opacity-80" />
+                    <span className={`grid h-9 w-9 place-items-center rounded-2xl ${stat.iconTone}`}>
+                      <Icon className="h-4 w-4" />
+                    </span>
                   </div>
                   <strong className="mt-3 block text-2xl font-black">
                     {typeof stat.value === 'number' ? stat.value : stat.value}
@@ -549,9 +559,6 @@ export function SaleCreatePage({
                     Catálogo POS
                   </p>
                   <h3 className="mt-2 text-2xl font-bold text-slate-950">Toca un producto para agregarlo</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">
-                    Si seleccionas el mismo producto varias veces, la cantidad aumenta automáticamente.
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
@@ -628,7 +635,6 @@ export function SaleCreatePage({
                 onIncrease={handleIncreaseItem}
                 onOpenCheckout={openCheckout}
                 onRemove={handleRemoveItem}
-                selectedCustomer={selectedClient ?? defaultCustomer}
                 subtotal={subtotal}
                 total={total}
               />
@@ -685,7 +691,6 @@ export function SaleCreatePage({
                       openCheckout();
                     }}
                     onRemove={handleRemoveItem}
-                    selectedCustomer={selectedClient ?? defaultCustomer}
                     subtotal={subtotal}
                     total={total}
                   />

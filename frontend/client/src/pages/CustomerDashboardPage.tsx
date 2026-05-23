@@ -355,15 +355,6 @@ export function CustomerDashboardPage({
     };
   }, [session.token]);
 
-  const customerInitials = useMemo(() => {
-    const fullName = dashboard?.profile.fullName?.trim();
-    const parts = (fullName || session.user.username).split(/\s+/).filter(Boolean);
-    return parts
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('');
-  }, [dashboard?.profile.fullName, session.user.username]);
-
   const deliveredOrders = useMemo(
     () => dashboard?.orders.filter((order) => order.deliveryStatus === 'entregado') ?? [],
     [dashboard],
@@ -575,85 +566,61 @@ export function CustomerDashboardPage({
                     </div>
                   </div>
 
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-                    <div className="space-y-4">
-                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        <div className="rounded-[20px] border border-slate-200 bg-slate-50/80 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                            Producto principal
-                          </p>
-                          <p className="mt-1 font-semibold text-slate-900">
-                            {mainProduct?.name ?? 'Sin detalle'}
-                          </p>
-                        </div>
-                        <div className="rounded-[20px] border border-slate-200 bg-slate-50/80 px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                            Cantidad
-                          </p>
-                          <p className="mt-1 font-semibold text-slate-900">
-                            {order.items.reduce((sum, item) => sum + item.quantity, 0)} unidad(es)
-                          </p>
-                        </div>
-                        <div className="rounded-[20px] border border-slate-200 bg-slate-50/80 px-4 py-3 sm:col-span-2 xl:col-span-1">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                            Dirección
-                          </p>
-                          <p className="mt-1 text-sm font-medium leading-6 text-slate-700">
-                            {deliveryLabel}
-                          </p>
-                        </div>
-                      </div>
-
-                      <OrderTimeline status={order.deliveryStatus} />
-                    </div>
-
+                  <div className="grid gap-4">
                     <div className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#fbfdff,#f8fbff)] p-4">
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3">
-                          <MapPin className="mt-0.5 h-4.5 w-4.5 text-blue-500" />
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {order.zone || 'Cobertura local'}
-                            </p>
-                            <p className="mt-1 text-sm leading-6 text-slate-500">{deliveryLabel}</p>
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                        <div className="space-y-3">
+                          <div className="flex items-start gap-3">
+                            <MapPin className="mt-0.5 h-4.5 w-4.5 text-blue-500" />
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Entrega
+                              </p>
+                              <p className="mt-1 font-semibold text-slate-900">
+                                {order.zone || 'Cobertura local'}
+                              </p>
+                              <p className="mt-1 text-sm leading-6 text-slate-500">{deliveryLabel}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <Truck className="mt-0.5 h-4.5 w-4.5 text-emerald-500" />
+                            <div>
+                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                Tiempo estimado
+                              </p>
+                              <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {order.estimatedMinutes
+                                  ? `${order.estimatedMinutes} a ${order.estimatedMinutes + 15} min`
+                                  : 'Tiempo en actualización'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-start gap-3">
-                          <Truck className="mt-0.5 h-4.5 w-4.5 text-emerald-500" />
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {order.estimatedMinutes
-                                ? `${order.estimatedMinutes} a ${order.estimatedMinutes + 15} min`
-                                : 'Tiempo en actualización'}
-                            </p>
-                            <p className="mt-1 text-sm text-slate-500">
-                              Seguimiento dinámico según el avance del pedido.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                        {order.trackingCode ? (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                          {order.trackingCode ? (
+                            <Button
+                              fullWidth
+                              onClick={() => window.open(`/tracking/${order.trackingCode}`, '_blank')}
+                              size="sm"
+                              variant="secondary"
+                            >
+                              Ver seguimiento
+                            </Button>
+                          ) : null}
                           <Button
                             fullWidth
-                            onClick={() => window.open(`/tracking/${order.trackingCode}`, '_blank')}
+                            onClick={() => void handleDownloadInvoice(order)}
                             size="sm"
-                            variant="secondary"
+                            variant="primary"
                           >
-                            Ver seguimiento
+                            Descargar factura
                           </Button>
-                        ) : null}
-                        <Button
-                          fullWidth
-                          onClick={() => void handleDownloadInvoice(order)}
-                          size="sm"
-                          variant="primary"
-                        >
-                          Descargar factura
-                        </Button>
+                        </div>
                       </div>
                     </div>
+
+                    <OrderTimeline status={order.deliveryStatus} />
                   </div>
                 </div>
               </Card>
@@ -858,27 +825,54 @@ export function CustomerDashboardPage({
         </div>
       </Card>
 
-      <Card className="rounded-[30px] border border-slate-200/80 bg-[linear-gradient(180deg,#0f172a,#1e3a8a)] px-6 py-6 text-white shadow-[0_28px_60px_rgba(15,23,42,0.18)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Cuenta</p>
-        <h3 className="mt-3 text-2xl font-bold tracking-[-0.03em]">{session.user.username}</h3>
-        <div className="mt-6 space-y-4">
-          <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/60">Correo actual</p>
-            <p className="mt-2 font-medium text-white">{profileForm.email || 'Sin correo'}</p>
+      <Card className="rounded-[30px] border border-blue-100 bg-white/70 px-6 py-6 shadow-[0_24px_56px_rgba(37,99,235,0.08)] backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,#eff6ff,#dbeafe)] text-blue-700 ring-1 ring-blue-100">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">Cuenta</p>
+            <h3 className="mt-1 text-2xl font-bold tracking-[-0.03em] text-slate-950">
+              {session.user.username}
+            </h3>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/60">Miembro desde</p>
-            <p className="mt-2 font-medium text-white">
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <div className="rounded-[22px] border border-blue-100/80 bg-[linear-gradient(180deg,rgba(239,246,255,0.8),rgba(255,255,255,0.92))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-500">
+              Usuario
+            </p>
+            <p className="mt-2 font-semibold text-slate-900">@{session.user.username}</p>
+          </div>
+
+          <div className="rounded-[22px] border border-blue-100/80 bg-[linear-gradient(180deg,rgba(239,246,255,0.72),rgba(255,255,255,0.92))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-500">
+              Correo
+            </p>
+            <p className="mt-2 font-medium text-slate-800">{profileForm.email || 'Sin correo'}</p>
+          </div>
+
+          <div className="rounded-[22px] border border-blue-100/80 bg-[linear-gradient(180deg,rgba(239,246,255,0.68),rgba(255,255,255,0.92))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-500">
+              Miembro desde
+            </p>
+            <p className="mt-2 font-medium text-slate-800">
               {dashboard?.profile.createdAt
                 ? dateOnly.format(new Date(dashboard.profile.createdAt))
                 : 'Sin registro'}
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-white/60">Pedidos activos</p>
-            <p className="mt-2 text-2xl font-black tracking-[-0.04em] text-white">
-              {dashboard?.summary.activeOrders ?? 0}
+
+          <div className="rounded-[22px] border border-blue-100/80 bg-[linear-gradient(180deg,rgba(239,246,255,0.64),rgba(255,255,255,0.94))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-500">
+              Estado de cuenta
             </p>
+            <div className="mt-2">
+              <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                Cuenta activa
+              </span>
+            </div>
           </div>
         </div>
       </Card>
@@ -894,9 +888,9 @@ export function CustomerDashboardPage({
   }[activeSection];
 
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-6 xl:grid-cols-[248px_minmax(0,1fr)]">
-        <aside className="space-y-4">
+    <div className="min-h-0 overflow-x-hidden xl:h-[calc(100vh-7rem)] xl:overflow-hidden">
+      <div className="grid gap-6 px-4 py-4 md:px-6 md:py-6 xl:h-full xl:grid-cols-[320px_minmax(0,1fr)] xl:gap-0 xl:px-0 xl:py-0">
+        <aside className="space-y-4 xl:flex xl:h-full xl:flex-col xl:overflow-hidden xl:border-r xl:border-white/60 xl:bg-white/28 xl:px-6 xl:py-6 xl:backdrop-blur-sm">
           <button
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:border-sky-200"
             onClick={onBackToStore}
@@ -906,11 +900,11 @@ export function CustomerDashboardPage({
             Volver a la tienda
           </button>
 
-          <Card className="rounded-[28px] border border-white/70 bg-white/92 p-3 shadow-[0_20px_44px_rgba(15,23,42,0.05)]">
+          <Card className="rounded-[28px] border border-white/70 bg-white/92 p-3 shadow-[0_20px_44px_rgba(15,23,42,0.05)] xl:flex-1 xl:overflow-hidden">
             <div className="rounded-[24px] bg-[linear-gradient(135deg,#0f172a,#2563eb)] px-4 py-4 text-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]">
               <div className="flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-sm font-bold text-white">
-                  {customerInitials}
+                <div className="grid h-11 w-11 place-items-center rounded-2xl border border-white/15 bg-white/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14)]">
+                  <UserRound className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-base font-bold tracking-[-0.03em] text-white">
@@ -921,7 +915,7 @@ export function CustomerDashboardPage({
               </div>
             </div>
 
-            <nav className="mt-3 hidden gap-2 xl:grid">
+            <nav className="mt-3 hidden gap-2 xl:grid xl:flex-1 xl:overflow-y-auto xl:pr-1">
               {sections.map((section) => {
                 const Icon = section.icon;
                 const isActive = activeSection === section.id;
@@ -983,7 +977,7 @@ export function CustomerDashboardPage({
           </Card>
         </aside>
 
-        <section className="space-y-5">
+        <section className="min-w-0 space-y-5 pb-6 xl:h-full xl:overflow-y-auto xl:px-6 xl:py-6">
           <div className="flex flex-col gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
               {sections.find((section) => section.id === activeSection)?.label}

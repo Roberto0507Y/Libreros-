@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 
+import { EditSheetModal } from '../components/ui/EditSheetModal';
 import type { CatalogOption, ProductItem, SubcategoryOption } from '../domain/types';
 import { currency } from '../lib/format';
 
@@ -7,6 +8,7 @@ type ProductCreatePageProps = {
   brands: CatalogOption[];
   categories: CatalogOption[];
   initialProductId?: number | null;
+  onConsumeInitialProductId?: () => void;
   isDeleting: boolean;
   isSaving: boolean;
   onCreate: (input: {
@@ -51,6 +53,7 @@ export function ProductCreatePage({
   brands,
   categories,
   initialProductId,
+  onConsumeInitialProductId,
   isDeleting,
   isSaving,
   onCreate,
@@ -77,6 +80,10 @@ export function ProductCreatePage({
     secondaryImage: '',
   });
   const [activeImage, setActiveImage] = useState<'primaryImage' | 'secondaryImage'>('primaryImage');
+  const [imageNames, setImageNames] = useState({
+    primaryImage: '',
+    secondaryImage: '',
+  });
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
@@ -97,11 +104,13 @@ export function ProductCreatePage({
 
     if (!file) {
       setForm((current) => ({ ...current, [field]: '' }));
+      setImageNames((current) => ({ ...current, [field]: '' }));
       return;
     }
 
     const imageData = await readFileAsDataUrl(file);
     setForm((current) => ({ ...current, [field]: imageData }));
+    setImageNames((current) => ({ ...current, [field]: file.name }));
     setActiveImage(field);
   };
 
@@ -120,11 +129,7 @@ export function ProductCreatePage({
       secondaryImage: form.secondaryImage,
     };
 
-    if (editingProductId) {
-      await onUpdate(editingProductId, payload);
-    } else {
-      await onCreate(payload);
-    }
+    await onCreate(payload);
 
     setForm({
       name: '',
@@ -140,7 +145,50 @@ export function ProductCreatePage({
     });
     setEditingProductId(null);
     setActiveImage('primaryImage');
+    setImageNames({
+      primaryImage: '',
+      secondaryImage: '',
+    });
     setActiveTab('list');
+  };
+
+  const closeEditModal = () => {
+    setEditingProductId(null);
+    setForm({
+      name: '',
+      description: '',
+      brandId: '',
+      categoryId: '',
+      subcategoryId: '',
+      purchasePrice: '',
+      salePrice: '',
+      initialStock: '',
+      primaryImage: '',
+      secondaryImage: '',
+    });
+    setActiveImage('primaryImage');
+    setImageNames({
+      primaryImage: '',
+      secondaryImage: '',
+    });
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingProductId) return;
+
+    await onUpdate(editingProductId, {
+      name: form.name,
+      description: form.description,
+      brandId: form.brandId ? Number(form.brandId) : null,
+      subcategoryId: Number(form.subcategoryId),
+      purchasePrice: Number(form.purchasePrice),
+      salePrice: Number(form.salePrice),
+      initialStock: Number(form.initialStock || 0),
+      primaryImage: form.primaryImage,
+      secondaryImage: form.secondaryImage,
+    });
+    closeEditModal();
   };
 
   const handleEditProduct = (product: ProductItem) => {
@@ -158,7 +206,10 @@ export function ProductCreatePage({
       secondaryImage: product.secondaryImage ?? '',
     });
     setActiveImage('primaryImage');
-    setActiveTab('create');
+    setImageNames({
+      primaryImage: product.primaryImage ? 'Imagen principal actual' : '',
+      secondaryImage: product.secondaryImage ? 'Imagen secundaria actual' : '',
+    });
   };
 
   const handleDeleteProduct = async (productId: number) => {
@@ -166,7 +217,6 @@ export function ProductCreatePage({
   };
 
   const resetForm = () => {
-    setEditingProductId(null);
     setForm({
       name: '',
       description: '',
@@ -180,6 +230,10 @@ export function ProductCreatePage({
       secondaryImage: '',
     });
     setActiveImage('primaryImage');
+    setImageNames({
+      primaryImage: '',
+      secondaryImage: '',
+    });
   };
 
   const visibleProducts = useMemo(() => {
@@ -225,7 +279,8 @@ export function ProductCreatePage({
     if (!product) return;
     if (editingProductId === product.id) return;
     handleEditProduct(product);
-  }, [editingProductId, initialProductId, products]);
+    onConsumeInitialProductId?.();
+  }, [editingProductId, initialProductId, onConsumeInitialProductId, products]);
 
   return (
     <div className="grid gap-6">
@@ -417,7 +472,7 @@ export function ProductCreatePage({
               {editingProductId ? 'Editar producto' : 'Nuevo producto'}
             </p>
             <h2 className="m-0 text-2xl font-bold text-slate-900">
-              {editingProductId ? 'Actualiza la ficha del producto' : 'Crea una ficha completa del producto'}
+              Crea una ficha completa del producto
             </h2>
             <p className="mt-2 max-w-3xl text-sm text-slate-600">
               Sube dos fotos, agrega una descripcion detallada y define el precio para que el
@@ -425,7 +480,7 @@ export function ProductCreatePage({
             </p>
           </div>
 
-          <form className="grid gap-8 xl:grid-cols-[minmax(0,0.95fr)_minmax(520px,1fr)]" onSubmit={handleSubmit}>
+          <form className="grid gap-8 2xl:grid-cols-[minmax(0,0.95fr)_minmax(520px,1fr)]" onSubmit={handleSubmit}>
             <div className="grid gap-6 rounded-[26px] border border-slate-200 bg-slate-50/80 p-5 md:p-6">
               <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
                 <div>
@@ -435,28 +490,44 @@ export function ProductCreatePage({
                   <h3 className="mt-2 text-lg font-bold text-slate-900">Fotos del producto</h3>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                  Foto principal
-                  <input
-                    accept="image/png,image/jpeg,image/webp"
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-                    onChange={(event) => void handleImageChange(event, 'primaryImage')}
-                    required
-                    type="file"
-                  />
-                </label>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                    Foto principal
+                    <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                      <input
+                        accept="image/png,image/jpeg,image/webp"
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        onChange={(event) => void handleImageChange(event, 'primaryImage')}
+                        required
+                        type="file"
+                      />
+                      <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                        Elegir archivo
+                      </span>
+                      <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                        {imageNames.primaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                      </span>
+                    </span>
+                  </label>
 
-                <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                  Foto secundaria
-                  <input
-                    accept="image/png,image/jpeg,image/webp"
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-                    onChange={(event) => void handleImageChange(event, 'secondaryImage')}
-                    required
-                    type="file"
-                  />
-                </label>
+                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                    Foto secundaria
+                    <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                      <input
+                        accept="image/png,image/jpeg,image/webp"
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        onChange={(event) => void handleImageChange(event, 'secondaryImage')}
+                        required
+                        type="file"
+                      />
+                      <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                        Elegir archivo
+                      </span>
+                      <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                        {imageNames.secondaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                      </span>
+                    </span>
+                  </label>
                 </div>
               </div>
 
@@ -484,7 +555,7 @@ export function ProductCreatePage({
                 <label className="grid gap-2 text-sm font-semibold text-slate-700">
                   Detalles del producto
                   <textarea
-                    className="min-h-40 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:min-h-40"
                     name="description"
                     onChange={handleChange}
                     placeholder={'Escribe una linea por detalle.\nEj. 417 funciones\nBateria AAA\nIdeal para estudiantes'}
@@ -617,13 +688,7 @@ export function ProductCreatePage({
                 disabled={isSaving}
                 type="submit"
               >
-                {isSaving
-                  ? editingProductId
-                    ? 'ACTUALIZANDO PRODUCTO...'
-                    : 'GUARDANDO PRODUCTO...'
-                  : editingProductId
-                    ? 'ACTUALIZAR PRODUCTO'
-                    : 'CREAR PRODUCTO'}
+                {isSaving ? 'GUARDANDO PRODUCTO...' : 'CREAR PRODUCTO'}
               </button>
             </div>
 
@@ -737,6 +802,330 @@ export function ProductCreatePage({
           </form>
         </section>
       )}
+
+      <EditSheetModal
+        isOpen={editingProductId !== null}
+        onClose={closeEditModal}
+        subtitle="Actualiza la ficha del producto sin salir del listado principal."
+        title="Editar producto"
+        widthClassName="max-w-[1400px]"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeEditModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !form.name.trim() || !form.categoryId || !form.subcategoryId}
+              form="edit-product-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO CAMBIOS...' : 'GUARDAR CAMBIOS'}
+            </button>
+          </div>
+        }
+      >
+        <form className="grid gap-8 2xl:grid-cols-[minmax(0,0.95fr)_minmax(520px,1fr)]" id="edit-product-form" onSubmit={handleEditSubmit}>
+          <div className="grid gap-6 rounded-[26px] border border-slate-200 bg-slate-50/80 p-5 md:p-6">
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Imagenes
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Fotos del producto</h3>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Foto principal
+                  <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                    <input
+                      accept="image/png,image/jpeg,image/webp"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(event) => void handleImageChange(event, 'primaryImage')}
+                      type="file"
+                    />
+                    <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                      Elegir archivo
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                      {imageNames.primaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                    </span>
+                  </span>
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Foto secundaria
+                  <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                    <input
+                      accept="image/png,image/jpeg,image/webp"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(event) => void handleImageChange(event, 'secondaryImage')}
+                      type="file"
+                    />
+                    <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                      Elegir archivo
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                      {imageNames.secondaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Informacion general
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Datos principales</h3>
+              </div>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Nombre del producto
+                <input
+                  autoFocus
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  name="name"
+                  onChange={handleChange}
+                  placeholder="Ej. Calculadora cientifica Casio FX-570LA Plus"
+                  required
+                  type="text"
+                  value={form.name}
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Detalles del producto
+                <textarea
+                  className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:min-h-40"
+                  name="description"
+                  onChange={handleChange}
+                  placeholder={'Escribe una linea por detalle.\nEj. 417 funciones\nBateria AAA\nIdeal para estudiantes'}
+                  rows={7}
+                  value={form.description}
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Clasificacion
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Marca y categoria</h3>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Marca
+                  <select
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    name="brandId"
+                    onChange={handleChange}
+                    value={form.brandId}
+                  >
+                    <option value="">Sin marca</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Categoria
+                  <select
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    name="categoryId"
+                    onChange={handleChange}
+                    required
+                    value={form.categoryId}
+                  >
+                    <option value="">Selecciona una categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Subcategoria
+                <select
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  name="subcategoryId"
+                  onChange={handleChange}
+                  required
+                  value={form.subcategoryId}
+                >
+                  <option value="">
+                    {form.categoryId ? 'Selecciona una subcategoria' : 'Primero selecciona una categoria'}
+                  </option>
+                  {filteredSubcategories.map((subcategory) => (
+                    <option key={subcategory.id} value={subcategory.id}>
+                      {subcategory.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Valores
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Precios y stock</h3>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Precio compra
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="purchasePrice"
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    type="number"
+                    value={form.purchasePrice}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Precio venta
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="salePrice"
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    type="number"
+                    value={form.salePrice}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Stock inicial
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="initialStock"
+                    onChange={handleChange}
+                    step="1"
+                    type="number"
+                    value={form.initialStock}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <aside className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-7">
+            <div className="mb-4 text-xs text-slate-500">
+              Inicio <span className="mx-1">→</span> {selectedBrand} <span className="mx-1">→</span>{' '}
+              {selectedCategory} <span className="mx-1">→</span> {selectedSubcategory}
+            </div>
+
+            <h3 className="border-b border-slate-200 pb-4 text-[1.7rem] font-bold uppercase leading-tight text-blue-900">
+              {form.name || 'NOMBRE DEL PRODUCTO'}
+            </h3>
+
+            <div className="mt-7 grid gap-7 xl:grid-cols-[72px_minmax(0,1fr)]">
+              <div className="grid gap-3">
+                {gallery.map((image) => (
+                  <button
+                    className={`grid h-[72px] w-[56px] place-items-center overflow-hidden rounded-xl border bg-white transition ${
+                      activeImage === image.id
+                        ? 'border-blue-500 ring-2 ring-blue-100'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                    key={image.id}
+                    onClick={() => setActiveImage(image.id)}
+                    type="button"
+                  >
+                    {image.src ? (
+                      <img alt={image.label} className="h-full w-full object-cover" src={image.src} />
+                    ) : (
+                      <span className="px-2 text-center text-[11px] font-semibold text-slate-400">
+                        {image.label}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid gap-6">
+                <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-slate-200 bg-slate-50 p-8 lg:min-h-[520px]">
+                  {currentImage ? (
+                    <img
+                      alt={form.name || 'Vista previa del producto'}
+                      className="max-h-[430px] w-full object-contain"
+                      src={currentImage}
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center text-sm font-medium text-slate-400">
+                      Sube las dos fotos para ver la ficha del producto
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-6">
+                  <div className="border-b border-slate-200 pb-3">
+                    <div className="flex flex-wrap gap-5 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                      <span className="border-b-2 border-amber-400 pb-2 text-slate-900">Descripcion</span>
+                      <span className="pb-2 text-slate-400">Detalles</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 text-sm leading-7 text-slate-700">
+                    {detailLines.length ? (
+                      <ul className="list-disc space-y-1 pl-5">
+                        {detailLines.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>
+                        Aqui se mostrara la descripcion detallada del producto, ideal para presentar
+                        medidas, funciones, material o beneficios.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 border-t border-blue-200 pt-5 md:grid-cols-[minmax(0,1fr)_170px]">
+                    <div className="grid gap-3">
+                      <div className="text-[2rem] font-bold text-slate-900">Q{form.salePrice || '0.00'}</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                        En existencia
+                      </div>
+                      <div className="text-sm text-slate-500">Compra: Q{form.purchasePrice || '0.00'}</div>
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500">
+                      <div className="font-semibold text-slate-700">{selectedBrand}</div>
+                      <div className="mt-2">Stock: {form.initialStock || '0'}</div>
+                      <div className="mt-2">{selectedCategory}</div>
+                      <div className="mt-2">{selectedSubcategory}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </form>
+      </EditSheetModal>
     </div>
   );
 }

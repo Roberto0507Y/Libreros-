@@ -4,7 +4,6 @@ import { SearchX } from 'lucide-react';
 import { UserCard } from '../components/users/UserCard';
 import { UserFilters } from '../components/users/UserFilters';
 import { UserSkeleton } from '../components/users/UserSkeleton';
-import { UserStats } from '../components/users/UserStats';
 import { UserTable } from '../components/users/UserTable';
 import type { RoleOption, UserManagementItem } from '../domain/types';
 
@@ -36,11 +35,6 @@ export function UsersPage({ isLoading, isSaving, onRoleChange, roles, users }: U
     });
   }, [filterRoleId, searchQuery, users]);
 
-  const adminCount = users.filter((user) =>
-    user.role.name.toLowerCase().includes('administrador'),
-  ).length;
-  const employeeCount = users.filter((user) => user.profileType === 'empleado').length;
-
   const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
@@ -65,18 +59,6 @@ export function UsersPage({ isLoading, isSaving, onRoleChange, roles, users }: U
           Gestion de usuarios
         </p>
         <h2 className="m-0 text-2xl font-bold text-slate-900">Administra cuentas y roles</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Centraliza las cuentas del sistema, revisa el estado de acceso y asigna roles internos
-          con una vista mucho mas clara para administracion.
-        </p>
-
-        <div className="mt-6">
-          <UserStats
-            adminCount={adminCount}
-            employeeCount={employeeCount}
-            totalUsers={users.length}
-          />
-        </div>
       </section>
 
       <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">

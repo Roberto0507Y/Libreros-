@@ -15,9 +15,14 @@ import ordersRouter from './routes/orders.routes.js';
 const app = express();
 const allowedOrigins = config.cors.origins;
 
+app.set('trust proxy', 1);
+
 app.use(
   cors({
     origin: allowedOrigins.includes('*') ? true : allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   }),
 );
 app.use(express.json({ limit: '12mb' }));

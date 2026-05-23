@@ -16,19 +16,19 @@ export function SalesChart({ points }: SalesChartProps) {
     .join(' ');
 
   return (
-    <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+    <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:rounded-[28px] sm:p-5">
       <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
             Grafica
           </p>
-          <h3 className="mt-2 text-xl font-bold text-slate-900">Ventas de los ultimos 7 dias</h3>
+          <h3 className="mt-2 text-lg font-bold text-slate-900 sm:text-xl">Ventas de los ultimos 7 dias</h3>
           <p className="mt-2 text-sm text-slate-500">
             Vista rapida del comportamiento diario de ventas registradas.
           </p>
         </div>
 
-        <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 md:min-w-[180px]">
           <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
             Total periodo
           </span>
@@ -38,8 +38,8 @@ export function SalesChart({ points }: SalesChartProps) {
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-        <div className="h-56 md:h-60">
+      <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-3 sm:p-4">
+        <div className="h-44 sm:h-52 md:h-60">
           <svg className="h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
             {Array.from({ length: 5 }).map((_, index) => {
               const y = 100 - index * 25;
@@ -88,13 +88,15 @@ export function SalesChart({ points }: SalesChartProps) {
           </svg>
         </div>
 
-        <div className="mt-3 grid grid-cols-7 gap-2">
-          {points.map((point) => (
-            <div className="text-center" key={point.date}>
-              <span className="block text-xs font-semibold text-slate-500">{point.label}</span>
-              <span className="mt-1 block text-xs text-slate-400">{currency.format(point.value)}</span>
-            </div>
-          ))}
+        <div className="-mx-1 mt-3 overflow-x-auto pb-1">
+          <div className="grid min-w-[420px] grid-cols-7 gap-2 px-1 sm:min-w-0">
+            {points.map((point) => (
+              <div className="text-center" key={point.date}>
+                <span className="block text-xs font-semibold text-slate-500">{point.label}</span>
+                <span className="mt-1 block text-[11px] text-slate-400 sm:text-xs">{currency.format(point.value)}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </article>

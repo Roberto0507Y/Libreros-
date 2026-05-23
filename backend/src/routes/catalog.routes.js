@@ -606,4 +606,103 @@ router.post('/subcategories', async (req, res, next) => {
   }
 });
 
+router.patch('/subcategories/:id', async (req, res, next) => {
+  const subcategoryId = Number(req.params.id);
+  const name = String(req.body.name ?? '').trim();
+  const categoryId = Number(req.body.categoryId);
+
+  if (Number.isNaN(subcategoryId) || !name || Number.isNaN(categoryId)) {
+    return res.status(400).json({
+      message: 'Debes enviar una subcategoria valida, nombre y categoria',
+    });
+  }
+
+  try {
+    const [subcategoryRows, categoryRows] = await Promise.all([
+      query(
+        `
+          SELECT
+            s.id_subcategoria AS id,
+            s.nombre,
+            s.id_categoria AS categoryId
+          FROM subcategorias s
+          WHERE s.id_subcategoria = ?
+          LIMIT 1
+        `,
+        [subcategoryId],
+      ),
+      query(
+        `
+          SELECT id_categoria AS id, nombre
+          FROM categorias
+          WHERE id_categoria = ?
+          LIMIT 1
+        `,
+        [categoryId],
+      ),
+    ]);
+
+    if (!subcategoryRows.length) {
+      return res.status(404).json({
+        message: 'Subcategoria no encontrada',
+      });
+    }
+
+    if (!categoryRows.length) {
+      return res.status(404).json({
+        message: 'La categoria seleccionada no existe',
+      });
+    }
+
+    const duplicateRows = await query(
+      `
+        SELECT id_subcategoria AS id
+        FROM subcategorias
+        WHERE LOWER(nombre) = LOWER(?)
+          AND id_categoria = ?
+          AND id_subcategoria <> ?
+        LIMIT 1
+      `,
+      [name, categoryId, subcategoryId],
+    );
+
+    if (duplicateRows.length) {
+      return res.status(409).json({
+        message: 'Ya existe otra subcategoria con ese nombre en esa categoria',
+      });
+    }
+
+    await query(
+      `
+        UPDATE subcategorias
+        SET nombre = ?, id_categoria = ?
+        WHERE id_subcategoria = ?
+      `,
+      [name, categoryId, subcategoryId],
+    );
+
+    const updatedRows = await query(
+      `
+        SELECT
+          s.id_subcategoria AS id,
+          s.nombre,
+          s.id_categoria AS categoryId,
+          c.nombre AS categoryName
+        FROM subcategorias s
+        INNER JOIN categorias c ON c.id_categoria = s.id_categoria
+        WHERE s.id_subcategoria = ?
+        LIMIT 1
+      `,
+      [subcategoryId],
+    );
+
+    res.json({
+      message: 'Subcategoria actualizada correctamente',
+      subcategory: updatedRows[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

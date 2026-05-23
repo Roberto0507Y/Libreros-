@@ -5,7 +5,7 @@ import { LoadingSkeleton } from '../components/subcategories/LoadingSkeleton';
 import { SubcategoryCard } from '../components/subcategories/SubcategoryCard';
 import { SubcategoryFilters } from '../components/subcategories/SubcategoryFilters';
 import { SubcategoryForm } from '../components/subcategories/SubcategoryForm';
-import { SubcategoryStats } from '../components/subcategories/SubcategoryStats';
+import { EditSheetModal } from '../components/ui/EditSheetModal';
 import type { CatalogOption, SubcategoryOption } from '../domain/types';
 
 type SubcategoriesPageProps = {
@@ -13,6 +13,7 @@ type SubcategoriesPageProps = {
   isLoading: boolean;
   isSaving: boolean;
   onCreate: (input: { name: string; categoryId: number }) => Promise<void>;
+  onUpdate: (input: { subcategoryId: number; name: string; categoryId: number }) => Promise<void>;
   subcategories: SubcategoryOption[];
 };
 
@@ -21,6 +22,7 @@ export function SubcategoriesPage({
   isLoading,
   isSaving,
   onCreate,
+  onUpdate,
   subcategories,
 }: SubcategoriesPageProps) {
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
@@ -30,15 +32,9 @@ export function SubcategoriesPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilterId, setCategoryFilterId] = useState('');
   const [localMessage, setLocalMessage] = useState('');
-
-  const categoriesUsedCount = useMemo(() => {
-    return new Set(subcategories.map((subcategory) => subcategory.categoryId)).size;
-  }, [subcategories]);
-
-  const latestSubcategoryName = useMemo(() => {
-    if (!subcategories.length) return '';
-    return subcategories[subcategories.length - 1]?.nombre ?? '';
-  }, [subcategories]);
+  const [editingSubcategoryId, setEditingSubcategoryId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCategoryId, setEditCategoryId] = useState('');
 
   const visibleSubcategories = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -96,19 +92,38 @@ export function SubcategoriesPage({
     setCategoryFilterId('');
   };
 
-  const handleUnavailableAction = (action: 'edit' | 'delete', subcategory: SubcategoryOption) => {
-    if (action === 'delete') {
-      const confirmed = window.confirm(
-        `¿Deseas eliminar ${subcategory.nombre}? La accion no continuara porque todavia no hay endpoint conectado para subcategorias.`,
-      );
-      if (!confirmed) return;
-    }
+  const openEditModal = (subcategory: SubcategoryOption) => {
+    setEditingSubcategoryId(subcategory.id);
+    setEditName(subcategory.nombre);
+    setEditCategoryId(String(subcategory.categoryId));
+    setLocalMessage('');
+  };
 
-    setLocalMessage(
-      action === 'edit'
-        ? 'La interfaz de edicion queda preparada, pero la actualizacion de subcategorias aun no esta conectada en el backend.'
-        : 'La confirmacion de eliminacion ya existe, pero la eliminacion aun no esta conectada en el backend.',
+  const closeEditModal = () => {
+    setEditingSubcategoryId(null);
+    setEditName('');
+    setEditCategoryId('');
+  };
+
+  const handleUnavailableDelete = (subcategory: SubcategoryOption) => {
+    const confirmed = window.confirm(
+      `¿Deseas eliminar ${subcategory.nombre}? La eliminacion de subcategorias aun no esta conectada en el backend.`,
     );
+    if (!confirmed) return;
+
+    setLocalMessage('La eliminacion de subcategorias aun no esta conectada en el backend.');
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingSubcategoryId) return;
+
+    await onUpdate({
+      subcategoryId: editingSubcategoryId,
+      name: editName,
+      categoryId: Number(editCategoryId),
+    });
+    closeEditModal();
   };
 
   return (
@@ -118,17 +133,6 @@ export function SubcategoriesPage({
           Catalogo de subcategorias
         </p>
         <h2 className="m-0 text-2xl font-bold text-slate-900">Administra tus subcategorias</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-          Organiza mejor tus productos con una vista mas clara de subcategorias, relaciones con categorias y acceso rapido a filtros.
-        </p>
-
-        <div className="mt-6">
-          <SubcategoryStats
-            categoryCount={categoriesUsedCount}
-            latestName={latestSubcategoryName}
-            total={subcategories.length}
-          />
-        </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
@@ -259,8 +263,8 @@ export function SubcategoriesPage({
                       'Categoria'
                     }
                     key={subcategory.id}
-                    onDelete={(item) => handleUnavailableAction('delete', item)}
-                    onEdit={(item) => handleUnavailableAction('edit', item)}
+                    onDelete={(item) => handleUnavailableDelete(item)}
+                    onEdit={(item) => openEditModal(item)}
                     subcategory={subcategory}
                   />
                 ))}
@@ -276,6 +280,76 @@ export function SubcategoriesPage({
           </div>
         </section>
       )}
+
+      <EditSheetModal
+        isOpen={editingSubcategoryId !== null}
+        onClose={closeEditModal}
+        subtitle="Actualiza el nombre y la categoria padre sin salir del listado."
+        title="Editar subcategoria"
+        widthClassName="max-w-2xl"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeEditModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !editName.trim() || !editCategoryId}
+              form="edit-subcategory-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO CAMBIOS...' : 'GUARDAR CAMBIOS'}
+            </button>
+          </div>
+        }
+      >
+        <form className="grid gap-5" id="edit-subcategory-form" onSubmit={handleEditSubmit}>
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            Nombre de la subcategoria
+            <input
+              autoFocus
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              onChange={(event) => setEditName(event.target.value)}
+              required
+              type="text"
+              value={editName}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            Categoria padre
+            <select
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+              onChange={(event) => setEditCategoryId(event.target.value)}
+              required
+              value={editCategoryId}
+            >
+              <option value="">Selecciona una categoria</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.nombre}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+              Vista previa
+            </p>
+            <h3 className="mt-3 text-lg font-bold text-slate-900">{editName || 'Nombre de la subcategoria'}</h3>
+            <p className="mt-2 text-sm text-slate-500">
+              {editCategoryId
+                ? categories.find((category) => category.id === Number(editCategoryId))?.nombre ?? 'Categoria padre'
+                : 'Selecciona una categoria padre'}
+            </p>
+          </div>
+        </form>
+      </EditSheetModal>
     </div>
   );
 }

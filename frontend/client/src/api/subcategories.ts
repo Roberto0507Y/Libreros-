@@ -14,3 +14,18 @@ export async function createSubcategory(
     },
   );
 }
+
+export async function updateSubcategory(
+  token: string,
+  subcategoryId: number,
+  input: { name: string; categoryId: number },
+) {
+  return authRequest<{ message: string; subcategory: SubcategoryOption }>(
+    `/api/catalog/subcategories/${subcategoryId}`,
+    token,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    },
+  );
+}

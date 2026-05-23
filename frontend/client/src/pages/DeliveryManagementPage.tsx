@@ -185,20 +185,40 @@ function DeliverySummaryCard({
   value: string;
 }) {
   const tones = {
-    blue: 'bg-blue-50 text-blue-700 ring-blue-100',
-    amber: 'bg-amber-50 text-amber-700 ring-amber-100',
-    emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-    cyan: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
+    blue: {
+      card: 'border-blue-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(239,246,255,0.95))]',
+      icon: 'bg-[linear-gradient(135deg,#1e3a8a,#2563eb)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)]',
+      label: 'text-blue-700/80',
+    },
+    amber: {
+      card: 'border-amber-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,251,235,0.95))]',
+      icon: 'bg-[linear-gradient(135deg,#f59e0b,#f97316)] text-white shadow-[0_14px_28px_rgba(249,115,22,0.2)]',
+      label: 'text-amber-700/80',
+    },
+    emerald: {
+      card: 'border-emerald-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(236,253,245,0.95))]',
+      icon: 'bg-[linear-gradient(135deg,#059669,#10b981)] text-white shadow-[0_14px_28px_rgba(16,185,129,0.18)]',
+      label: 'text-emerald-700/80',
+    },
+    cyan: {
+      card: 'border-cyan-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(236,254,255,0.95))]',
+      icon: 'bg-[linear-gradient(135deg,#0891b2,#2563eb)] text-white shadow-[0_14px_28px_rgba(14,116,144,0.18)]',
+      label: 'text-cyan-700/80',
+    },
   } as const;
 
+  const currentTone = tones[tone];
+
   return (
-    <div className="rounded-[24px] border border-slate-200/80 bg-white/95 p-4 shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
+    <div
+      className={`rounded-[24px] border p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:shadow-[0_24px_42px_rgba(15,23,42,0.08)] ${currentTone.card}`}
+    >
       <div className="flex items-center gap-3">
-        <span className={`grid h-11 w-11 place-items-center rounded-2xl ring-1 ${tones[tone]}`}>
+        <span className={`grid h-11 w-11 place-items-center rounded-2xl ${currentTone.icon}`}>
           <Icon className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${currentTone.label}`}>
             {label}
           </p>
           <strong className="mt-1 block text-2xl font-black tracking-[-0.04em] text-slate-950">
@@ -345,8 +365,7 @@ export function DeliveryManagementPage({
     if (isCompletedMode) {
       return {
         title: 'Mis entregas',
-        description:
-          'Consulta tus entregas finalizadas, revisa el historial reciente y mantén ordenado tu cierre diario.',
+        description: '',
         emptyTitle: 'Aún no tienes entregas completadas',
         emptyDescription:
           'Cuando cierres una ruta correctamente, el pedido aparecerá aquí automáticamente.',
@@ -366,8 +385,7 @@ export function DeliveryManagementPage({
 
     return {
       title: 'Centro de entregas',
-      description:
-        'Despacha rutas, asigna repartidores y monitorea pedidos con una vista más operativa.',
+      description: '',
       emptyTitle: 'No hay entregas para mostrar',
       emptyDescription: 'Todavía no existen pedidos de domicilio con los filtros actuales.',
     };

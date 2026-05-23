@@ -1,6 +1,5 @@
 import { ReceiptText, ShoppingCart } from 'lucide-react';
 
-import type { CustomerItem } from '../../domain/types';
 import { currency } from '../../lib/format';
 import { CartItemRow, type PosCartItem } from './CartItemRow';
 
@@ -15,7 +14,6 @@ type PosCartProps = {
   onIncrease: (productId: number) => void;
   onOpenCheckout: () => void;
   onRemove: (productId: number) => void;
-  selectedCustomer: CustomerItem | null;
   subtotal: number;
   total: number;
 };
@@ -31,7 +29,6 @@ export function PosCart({
   onIncrease,
   onOpenCheckout,
   onRemove,
-  selectedCustomer,
   subtotal,
   total,
 }: PosCartProps) {
@@ -48,19 +45,9 @@ export function PosCart({
           </div>
         </div>
 
-        <div className="mt-4 rounded-[24px] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-white">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-100">Cliente</span>
-          <strong className="mt-2 block text-lg">
-            {selectedCustomer
-              ? selectedCustomer.nit?.toUpperCase() === 'CF'
-                ? 'Consumidor Final - NIT CF'
-                : selectedCustomer.name
-              : 'Consumidor Final - NIT CF'}
-          </strong>
-          <div className="mt-3 flex items-center justify-between text-sm text-blue-100">
-            <span>{cartCount} {cartCount === 1 ? 'artículo' : 'artículos'}</span>
-            <span>{currency.format(total)}</span>
-          </div>
+        <div className="mt-4 flex items-center justify-between rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <span>{cartCount} {cartCount === 1 ? 'artículo' : 'artículos'}</span>
+          <strong className="text-base font-bold text-slate-950">{currency.format(total)}</strong>
         </div>
       </div>
 

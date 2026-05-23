@@ -8,6 +8,7 @@ import { fetchCart, replaceCart } from '../api/cart';
 import { createOrder } from '../api/orders';
 import { fetchStorefront } from '../api/storefront';
 import { Footer, type FooterAction } from '../components/Footer';
+import { NexusLogo } from '../components/branding/NexusLogo';
 import { DeliveryStep } from '../components/payment-demo/DeliveryStep';
 import { DemoCardPreview } from '../components/payment-demo/DemoCardPreview';
 import { InvoicePreview } from '../components/payment-demo/InvoicePreview';
@@ -142,6 +143,14 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
   const initialProductId = Number(initialSearchParams?.get('productId'));
   const initialBrandId = Number(initialSearchParams?.get('brandId'));
   const initialCategoryId = Number(initialSearchParams?.get('categoryId'));
+  const isInitialBrandProductsRoute =
+    initialSearchParams?.get('brandView') === 'brand-products' &&
+    Number.isFinite(initialBrandId) &&
+    initialBrandId > 0;
+  const isInitialCategoryProductsRoute =
+    initialSearchParams?.get('categoryView') === 'category-products' &&
+    Number.isFinite(initialCategoryId) &&
+    initialCategoryId > 0;
   const isInitialProductDetailRoute =
     initialSearchParams?.get('detailView') === 'product-detail' &&
     Number.isFinite(initialProductId) &&
@@ -280,7 +289,13 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
     | 'all-products'
     | 'account'
   >(
-    isInitialProductDetailRoute ? 'product-detail' : 'brands',
+    isInitialProductDetailRoute
+      ? 'product-detail'
+      : isInitialBrandProductsRoute
+        ? 'brand-products'
+        : isInitialCategoryProductsRoute
+          ? 'category-products'
+          : 'brands',
   );
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isDeliveryOpen, setIsDeliveryOpen] = useState(false);
@@ -363,7 +378,9 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
     url.searchParams.delete('detailView');
     url.searchParams.delete('backView');
     url.searchParams.delete('brandId');
+    url.searchParams.delete('brandView');
     url.searchParams.delete('categoryId');
+    url.searchParams.delete('categoryView');
     window.history.replaceState({}, '', url.toString());
   };
 
@@ -461,7 +478,11 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         setCategories(data.categories);
         setProducts(data.products);
 
-        if (!isInitialProductDetailRoute) {
+        if (
+          !isInitialProductDetailRoute &&
+          !isInitialCategoryProductsRoute &&
+          !isInitialBrandProductsRoute
+        ) {
           const firstBrandWithProducts =
             data.brands.find((brand) => data.products.some((product) => product.brandId === brand.id))?.id ??
             null;
@@ -765,6 +786,8 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
   const isAccountTab = view === 'account';
   const isCatalogTab = view === 'all-products';
   const isProductDetailTab = view === 'product-detail';
+  const isStandaloneBrandTab = isInitialBrandProductsRoute;
+  const isStandaloneCategoryTab = isInitialCategoryProductsRoute;
   const productGridClass =
     'grid justify-center gap-5 [grid-template-columns:repeat(auto-fit,minmax(248px,288px))]';
   const isHomeNavActive = view === 'brands' && !isCatalogTab && !isProductDetailTab;
@@ -998,19 +1021,19 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
   };
 
   const handleBrandOpen = (brandId: number) => {
-    clearDetailSearchParams();
-    setSelectedBrandId(brandId);
-    setSelectedProductId(null);
-    setIsZoomActive(false);
-    setView('brand-products');
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('brandView', 'brand-products');
+    url.searchParams.set('brandId', String(brandId));
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
   };
 
   const handleCategoryOpen = (categoryId: number) => {
-    clearDetailSearchParams();
-    setSelectedCategoryId(categoryId);
-    setSelectedProductId(null);
-    setIsZoomActive(false);
-    setView('category-products');
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('categoryView', 'category-products');
+    url.searchParams.set('categoryId', String(categoryId));
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
   };
 
   const handleOpenAllProducts = () => {
@@ -1573,14 +1596,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
               }}
               type="button"
             >
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-white/15 bg-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_12px_24px_rgba(15,23,42,0.18)]">
-                <img alt="Librería Digital Nexus" className="h-8 w-auto object-contain" src="/libreria.png" />
-              </div>
-              <div className="min-w-0">
-                <strong className="block truncate text-[0.98rem] font-semibold tracking-[-0.02em] text-white md:text-[1.05rem]">
-                  Librería Digital Nexus
-                </strong>
-              </div>
+              <NexusLogo mode="navbar" />
             </button>
 
             <nav className="hidden items-center justify-center md:flex">
@@ -1846,7 +1862,13 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto grid max-w-7xl gap-8 px-4 py-8 md:px-6 lg:gap-10 lg:py-10">
+      <main
+        className={`relative z-10 mx-auto grid gap-8 ${
+          isAccountTab
+            ? 'w-full max-w-none px-0 py-0'
+            : 'max-w-7xl px-4 py-8 md:px-6 lg:gap-10 lg:py-10'
+        }`}
+      >
         {isAccountTab && session ? (
           <CustomerDashboardPage
             onBackToStore={() => setView('brands')}
@@ -1855,7 +1877,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
           />
         ) : (
           <>
-        {!isCatalogTab && !isProductDetailTab ? (
+        {!isCatalogTab && !isProductDetailTab && !isStandaloneCategoryTab && !isStandaloneBrandTab ? (
         <Card className="order-1 overflow-hidden rounded-[40px] border border-white/70 bg-white/78 shadow-[0_35px_90px_rgba(15,23,42,0.08)]" id="benefits-section" ref={benefitsSectionRef}>
           <div className="grid gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <div className="group relative overflow-hidden rounded-[30px] bg-slate-100 shadow-[0_30px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/80">
@@ -1997,7 +2019,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         </Card>
         ) : null}
 
-        {!isProductDetailTab ? (
+        {!isProductDetailTab && !isStandaloneCategoryTab && !isStandaloneBrandTab ? (
         <Card className="order-3 px-6 py-8" id="featured-products-section" ref={featuredProductsSectionRef}>
           <SectionTitle
             actions={
@@ -2081,10 +2103,17 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
                     <div>
                       <button
                         className="mb-3 inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                        onClick={() => setView('brands')}
+                        onClick={() => {
+                          if (isStandaloneBrandTab) {
+                            window.location.href = '/';
+                            return;
+                          }
+
+                          setView('brands');
+                        }}
                         type="button"
                       >
-                        ← Volver a marcas
+                        ← {isStandaloneBrandTab ? 'Volver a la tienda' : 'Volver a marcas'}
                       </button>
                       <h2 className="text-3xl font-bold uppercase tracking-wide text-blue-900">
                         {selectedBrand?.nombre ?? 'Marca'}
@@ -2450,7 +2479,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
           </Card>
         ) : null}
 
-        {!isCatalogTab && !isProductDetailTab ? (
+        {!isCatalogTab && !isProductDetailTab && !isStandaloneBrandTab ? (
           <Card className="order-2 rounded-[34px] border border-white/70 bg-white/85 px-6 py-8 shadow-[0_30px_80px_rgba(15,23,42,0.06)] backdrop-blur" id="categories-section" ref={categoriesSectionRef}>
             {isLoading ? (
               <div className="empty-state compact">
@@ -2503,10 +2532,17 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
                       <div>
                         <button
                           className="mb-3 inline-flex items-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                          onClick={() => setView('categories')}
+                          onClick={() => {
+                            if (isStandaloneCategoryTab) {
+                              window.location.href = '/';
+                              return;
+                            }
+
+                            setView('categories');
+                          }}
                           type="button"
                         >
-                          ← Volver a categorías
+                          ← {isStandaloneCategoryTab ? 'Volver a la tienda' : 'Volver a categorías'}
                         </button>
                         <h2 className="text-3xl font-bold uppercase tracking-wide text-blue-900">
                           {selectedCategory?.nombre ?? 'Categoría'}
@@ -2561,7 +2597,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
           </Card>
         ) : null}
 
-          {!isCatalogTab && !isProductDetailTab ? (
+          {!isCatalogTab && !isProductDetailTab && !isStandaloneCategoryTab && !isStandaloneBrandTab ? (
             <Card className="order-5 px-6 py-8" id="testimonials-section" ref={testimonialsSectionRef}>
               <SectionTitle
                 align="center"

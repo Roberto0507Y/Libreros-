@@ -165,7 +165,7 @@ export function InventoryPage({
                 Ajustar inventario
               </button>
               <button
-                className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+                className="rounded-2xl border border-emerald-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(236,253,245,0.95))] px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-200 hover:bg-emerald-50"
                 onClick={() => {
                   onEditProduct();
                   setLocalMessage('Abriendo productos para registrar una entrada de stock.');
@@ -175,7 +175,7 @@ export function InventoryPage({
                 Entrada de stock
               </button>
               <button
-                className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700 transition hover:bg-amber-100"
+                className="rounded-2xl border border-amber-100 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(255,251,235,0.95))] px-4 py-3 text-sm font-semibold text-amber-700 transition hover:border-amber-200 hover:bg-amber-50"
                 onClick={() => {
                   onEditProduct();
                   setLocalMessage('Abriendo productos para registrar una salida o ajuste de stock.');

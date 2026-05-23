@@ -104,9 +104,7 @@ export function DeliveryHistoryPage({ session }: DeliveryHistoryPageProps) {
             <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">
               Historial de entregas
             </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 md:text-base">
-              Consulta quién completó cada entrega, el número de pedido y el tiempo total que tomó.
-            </p>
+            
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

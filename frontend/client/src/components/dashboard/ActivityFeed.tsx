@@ -13,20 +13,20 @@ type ActivityFeedProps = {
 
 export function ActivityFeed({ items }: ActivityFeedProps) {
   return (
-    <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+    <article className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:rounded-[28px] sm:p-5">
       <div className="mb-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
           Actividad reciente
         </p>
-        <h3 className="mt-2 text-xl font-bold text-slate-900">Ultimas acciones del sistema</h3>
+        <h3 className="mt-2 text-lg font-bold text-slate-900 sm:text-xl">Ultimas acciones del sistema</h3>
       </div>
 
       {items.length ? (
         <div className="grid gap-3">
           {items.map((item) => (
-            <div className="flex gap-4 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3.5" key={item.id}>
+            <div className="flex gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-3.5 sm:gap-4 sm:rounded-[24px]" key={item.id}>
               <span
-                className={`mt-1 inline-flex h-3 w-3 rounded-full ${
+                className={`mt-1 inline-flex h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3 ${
                   item.tone === 'blue' ? 'bg-blue-500' : 'bg-emerald-500'
                 }`}
               />

@@ -37,7 +37,7 @@ import { deleteBrand, updateBrand } from './api/brands';
 import { createProduct, deleteProduct, updateProduct } from './api/products';
 import { registerSale } from './api/sales';
 import { createCustomer, searchCustomers } from './api/customers';
-import { createSubcategory } from './api/subcategories';
+import { createSubcategory, updateSubcategory } from './api/subcategories';
 import { fetchUsers, updateUserRole } from './api/users';
 import { UsersPage } from './pages/UsersPage';
 import { currency } from './lib/format';
@@ -485,6 +485,32 @@ export default function App() {
     }
   };
 
+  const handleUpdateSubcategory = async (input: { subcategoryId: number; name: string; categoryId: number }) => {
+    if (!session) return;
+
+    setIsSavingSubcategory(true);
+    setError('');
+    setActionMessage('');
+
+    try {
+      const payload = await updateSubcategory(session.token, input.subcategoryId, {
+        name: input.name,
+        categoryId: input.categoryId,
+      });
+      setActionMessage(payload.message);
+      await load(session);
+      setActiveSection('subcategories');
+    } catch (subcategoryError) {
+      setError(
+        subcategoryError instanceof Error
+          ? subcategoryError.message
+          : 'No se pudo actualizar la subcategoria',
+      );
+    } finally {
+      setIsSavingSubcategory(false);
+    }
+  };
+
   const handleUpdateUserRole = async (input: { userId: number; roleId: number }) => {
     if (!session) return;
 
@@ -517,7 +543,6 @@ export default function App() {
   return (
     <AppShell
       activeSection={activeSection}
-      notificationsCount={metrics.notificationsCount}
       onLogout={handleLogout}
       onNavigate={setActiveSection}
       session={session}
@@ -585,6 +610,7 @@ export default function App() {
           brands={brands}
           categories={categories}
           initialProductId={inventoryProductTargetId}
+          onConsumeInitialProductId={() => setInventoryProductTargetId(null)}
           isDeleting={isDeletingProduct}
           isSaving={isSavingProduct}
           onCreate={handleCreateProduct}
@@ -624,6 +650,7 @@ export default function App() {
           isLoading={isLoading}
           isSaving={isSavingSubcategory}
           onCreate={handleCreateSubcategory}
+          onUpdate={handleUpdateSubcategory}
           subcategories={subcategories}
         />
       ) : null}

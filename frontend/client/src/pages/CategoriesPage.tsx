@@ -1,6 +1,7 @@
 import { useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { API_URL } from '../api/client';
+import { EditSheetModal } from '../components/ui/EditSheetModal';
 import type { CatalogOption } from '../domain/types';
 
 type CategoriesPageProps = {
@@ -29,10 +30,12 @@ export function CategoriesPage({
   onUpdate,
 }: CategoriesPageProps) {
   const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editImage, setEditImage] = useState('');
 
   const visibleCategories = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -51,7 +54,6 @@ export function CategoriesPage({
   };
 
   const resetForm = () => {
-    setEditingCategoryId(null);
     setName('');
     setImage('');
   };
@@ -59,11 +61,7 @@ export function CategoriesPage({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (editingCategoryId) {
-      await onUpdate({ categoryId: editingCategoryId, name, image: image || undefined });
-    } else {
-      await onCreate({ name, image });
-    }
+    await onCreate({ name, image });
 
     setActiveTab('list');
     resetForm();
@@ -82,9 +80,33 @@ export function CategoriesPage({
 
   const handleEditCategory = (category: CatalogOption) => {
     setEditingCategoryId(category.id);
-    setName(category.nombre);
-    setImage(category.imagen ?? '');
-    setActiveTab('create');
+    setEditName(category.nombre);
+    setEditImage(category.imagen ?? '');
+  };
+
+  const closeEditModal = () => {
+    setEditingCategoryId(null);
+    setEditName('');
+    setEditImage('');
+  };
+
+  const handleEditImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setEditImage('');
+      return;
+    }
+
+    setEditImage(await readFileAsDataUrl(file));
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingCategoryId) return;
+
+    await onUpdate({ categoryId: editingCategoryId, name: editName, image: editImage || undefined });
+    closeEditModal();
   };
 
   return (
@@ -132,10 +154,10 @@ export function CategoriesPage({
           <article className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
           <div className="mb-5">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
-              {editingCategoryId ? 'Editar categoria' : 'Nueva categoria'}
+              Nueva categoria
             </p>
             <h3 className="text-xl font-bold text-slate-900">
-              {editingCategoryId ? 'Actualizar categoria' : 'Agregar categoria'}
+              Agregar categoria
             </h3>
           </div>
 
@@ -179,24 +201,8 @@ export function CategoriesPage({
                 disabled={isSaving}
                 type="submit"
               >
-                {isSaving
-                  ? editingCategoryId
-                    ? 'ACTUALIZANDO CATEGORIA...'
-                    : 'GUARDANDO CATEGORIA...'
-                  : editingCategoryId
-                    ? 'ACTUALIZAR CATEGORIA'
-                    : 'CREAR CATEGORIA'}
+                {isSaving ? 'GUARDANDO CATEGORIA...' : 'CREAR CATEGORIA'}
               </button>
-
-              {editingCategoryId ? (
-                <button
-                  className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  onClick={resetForm}
-                  type="button"
-                >
-                  Cancelar
-                </button>
-              ) : null}
             </div>
           </form>
           </article>
@@ -227,8 +233,8 @@ export function CategoriesPage({
           </article>
         </section>
       ) : (
-        <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
-          <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
                 Categorias registradas
@@ -236,7 +242,7 @@ export function CategoriesPage({
               <h3 className="text-xl font-bold text-slate-900">Listado de categorias</h3>
             </div>
 
-            <div className="w-full md:max-w-xs">
+            <div className="w-full lg:max-w-sm">
               <input
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 onChange={(event) => setSearchQuery(event.target.value)}
@@ -247,17 +253,17 @@ export function CategoriesPage({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
             {visibleCategories.map((category) => (
               <div
-                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
+                className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 shadow-[0_10px_24px_rgba(15,23,42,0.03)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.06)]"
                 key={category.id}
               >
-                <div className="grid h-28 place-items-center overflow-hidden rounded-2xl bg-white p-3">
+                <div className="grid aspect-[16/8] place-items-center overflow-hidden rounded-[20px] bg-white p-3">
                   {category.imagen ? (
                     <img
                       alt={category.nombre}
-                      className="max-h-full w-full object-contain"
+                      className="h-full w-full object-cover"
                       src={resolveImageSrc(category.imagen)}
                     />
                   ) : (
@@ -266,19 +272,19 @@ export function CategoriesPage({
                     </span>
                   )}
                 </div>
-                <div className="mt-3 text-base font-semibold text-slate-900">{category.nombre}</div>
+                <div className="mt-4 text-[1.1rem] font-semibold text-slate-900">{category.nombre}</div>
                 <div className="mt-1 text-xs text-slate-500">ID: {category.id}</div>
 
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <button
-                    className="flex-1 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+                    className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
                     onClick={() => handleEditCategory(category)}
                     type="button"
                   >
                     Editar
                   </button>
                   <button
-                    className="flex-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={isDeleting}
                     onClick={() => void onDelete(category.id)}
                     type="button"
@@ -289,8 +295,82 @@ export function CategoriesPage({
               </div>
             ))}
           </div>
+          {!visibleCategories.length ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
+              <strong className="block text-slate-900">No hay categorias para este filtro.</strong>
+              <span className="mt-2 block text-sm text-slate-500">
+                Prueba con otro nombre o crea una nueva categoria.
+              </span>
+            </div>
+          ) : null}
         </section>
       )}
+
+      <EditSheetModal
+        isOpen={editingCategoryId !== null}
+        onClose={closeEditModal}
+        subtitle="Actualiza el nombre y la imagen sin salir del listado de categorias."
+        title="Editar categoria"
+        widthClassName="max-w-3xl"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeEditModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !editName.trim()}
+              form="edit-category-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO CAMBIOS...' : 'GUARDAR CAMBIOS'}
+            </button>
+          </div>
+        }
+      >
+        <form className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]" id="edit-category-form" onSubmit={handleEditSubmit}>
+          <div className="grid gap-4">
+            <label className="grid gap-2 text-sm font-semibold text-slate-700">
+              Nombre de la categoria
+              <input
+                autoFocus
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                onChange={(event) => setEditName(event.target.value)}
+                placeholder="Ej. Escolar"
+                required
+                type="text"
+                value={editName}
+              />
+            </label>
+
+            <label className="grid gap-2 text-sm font-semibold text-slate-700">
+              Imagen de la categoria
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                onChange={(event) => void handleEditImageChange(event)}
+                type="file"
+              />
+            </label>
+          </div>
+
+          <div className="grid place-items-center rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] p-5">
+            {editImage ? (
+              <img
+                alt="Vista previa de categoria"
+                className="max-h-56 w-full object-contain"
+                src={resolveImageSrc(editImage)}
+              />
+            ) : (
+              <span className="text-sm font-medium text-slate-400">Sin imagen seleccionada</span>
+            )}
+          </div>
+        </form>
+      </EditSheetModal>
     </div>
   );
 }

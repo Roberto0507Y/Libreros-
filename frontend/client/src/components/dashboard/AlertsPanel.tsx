@@ -10,23 +10,23 @@ export function AlertsPanel({ alerts, onGoToInventory }: AlertsPanelProps) {
   const lowStock = alerts.filter((product) => product.stock > 0);
 
   return (
-    <article className="flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+    <article className="flex h-full flex-col rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:rounded-[28px] sm:p-5">
       <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
             Alertas
           </p>
-          <h3 className="mt-2 text-xl font-bold text-slate-900">Inventario critico</h3>
+          <h3 className="mt-2 text-lg font-bold text-slate-900 sm:text-xl">Inventario critico</h3>
         </div>
 
-        <div className="rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">
+        <div className="self-start rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 md:self-auto">
           {alerts.length} alertas
         </div>
       </div>
 
       {alerts.length ? (
         <div className="grid gap-3">
-          <div className="rounded-[24px] border border-rose-200 bg-rose-50/70 p-4">
+          <div className="rounded-[22px] border border-rose-200 bg-rose-50/70 p-4 sm:rounded-[24px]">
             <strong className="block text-sm text-slate-900">Productos sin stock</strong>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {outOfStock.length ? (
@@ -44,7 +44,7 @@ export function AlertsPanel({ alerts, onGoToInventory }: AlertsPanelProps) {
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-amber-200 bg-amber-50/70 p-4">
+          <div className="rounded-[22px] border border-amber-200 bg-amber-50/70 p-4 sm:rounded-[24px]">
             <strong className="block text-sm text-slate-900">Productos con stock bajo</strong>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {lowStock.length ? (
@@ -72,7 +72,7 @@ export function AlertsPanel({ alerts, onGoToInventory }: AlertsPanelProps) {
       )}
 
       <button
-        className="mt-4 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+        className="mt-4 w-full rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
         onClick={onGoToInventory}
         type="button"
       >

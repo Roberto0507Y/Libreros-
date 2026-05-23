@@ -132,7 +132,7 @@ export function DashboardPage({
   };
 
   return (
-    <div className="grid gap-6">
+    <div className="grid w-full min-w-0 gap-4 sm:gap-6">
       {detailMessage ? (
         <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
           {detailMessage}
@@ -153,7 +153,7 @@ export function DashboardPage({
 
           <SalesChart points={metrics.revenueSeries} />
 
-          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr] xl:gap-6">
             <RecentSales onGoToSales={onGoToSales} onViewSale={handleViewSale} sales={recentSales} />
             <AlertsPanel alerts={lowStockProducts} onGoToInventory={onGoToInventory} />
           </div>

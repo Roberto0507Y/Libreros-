@@ -85,10 +85,6 @@ export function SalesHistoryPage({ session }: SalesHistoryPageProps) {
               Cuadre diario
             </p>
             <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950">Historial de ventas</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 md:text-base">
-              Consulta las ventas realizadas por día, revisa el detalle del cajero y filtra por
-              cliente, NIT, método de pago o producto.
-            </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
