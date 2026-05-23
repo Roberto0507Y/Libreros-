@@ -2,11 +2,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const DEFAULT_FRONTEND_URL = 'http://localhost:5173';
+const normalizeOrigin = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  return value.trim().replace(/\/+$/, '');
+};
 
 const parseOrigins = (value, fallbackOrigin) => {
   if (!value) {
-    return [fallbackOrigin];
+    return fallbackOrigin ? [fallbackOrigin] : [];
   }
 
   return value
@@ -16,6 +22,9 @@ const parseOrigins = (value, fallbackOrigin) => {
 };
 
 const config = {
+  app: {
+    frontendUrl: normalizeOrigin(process.env.FRONTEND_URL),
+  },
   server: {
     port: Number(process.env.PORT ?? 2000),
   },
@@ -34,14 +43,8 @@ const config = {
     expiresIn: process.env.JWT_EXPIRES_IN ?? '8h',
     passwordResetExpiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 60),
   },
-  app: {
-    frontendUrl: process.env.FRONTEND_URL ?? DEFAULT_FRONTEND_URL,
-  },
   cors: {
-    origins: parseOrigins(
-      process.env.CORS_ORIGIN,
-      process.env.FRONTEND_URL ?? DEFAULT_FRONTEND_URL,
-    ),
+    origins: parseOrigins(process.env.CORS_ORIGIN, normalizeOrigin(process.env.FRONTEND_URL)),
   },
   aws: {
     region: process.env.AWS_REGION ?? '',
