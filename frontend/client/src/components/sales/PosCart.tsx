@@ -35,10 +35,10 @@ export function PosCart({
   return (
     <aside
       className={`flex flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_54px_rgba(15,23,42,0.08)] ${
-        isCompact ? 'h-full' : 'max-h-[calc(100vh-7rem)]'
+        isCompact ? 'h-full' : 'h-[calc(100vh-7rem)]'
       }`}
     >
-      <div className="border-b border-slate-200 px-5 py-5">
+      <div className="shrink-0 border-b border-slate-200 px-5 py-5">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-950 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]">
             <ShoppingCart className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function PosCart({
         )}
       </div>
 
-      <div className="border-t border-slate-200 bg-slate-50/70 px-5 py-5">
+      <div className="shrink-0 border-t border-slate-200 bg-slate-50/70 px-5 py-5">
         <div className="rounded-[26px] border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid gap-3">
             <div className="flex items-center justify-between text-sm text-slate-600">
