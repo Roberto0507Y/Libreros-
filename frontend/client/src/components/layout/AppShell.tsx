@@ -384,7 +384,7 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="content-area min-w-0 w-full bg-[linear-gradient(180deg,#f7f8fc_0%,#eef2f8_100%)] px-3 py-3 pb-24 lg:px-4 lg:py-4 lg:pb-6">
+        <main className="content-area min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain w-full bg-[linear-gradient(180deg,#f7f8fc_0%,#eef2f8_100%)] px-3 py-3 pb-24 lg:px-4 lg:py-4 lg:pb-6">
           {children}
         </main>
       </div>

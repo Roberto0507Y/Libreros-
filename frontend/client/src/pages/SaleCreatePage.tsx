@@ -627,7 +627,7 @@ export function SaleCreatePage({
           </div>
 
           <div className="hidden xl:block">
-            <div className="sticky top-24">
+            <div className="sticky top-16">
               <PosCart
                 cartCount={cartItems.length}
                 discount={discount}
