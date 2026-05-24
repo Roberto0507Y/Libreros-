@@ -93,11 +93,12 @@ function NexusMark({ className = '' }: { className?: string }) {
 
 export function NexusLogo({ collapsed = false, mode = 'sidebar' }: NexusLogoProps) {
   const isSidebar = mode === 'sidebar';
+  const isNavbar = mode === 'navbar';
 
   return (
     <div
       className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#081028] to-[#132d6b] shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-300/18 hover:shadow-[0_18px_40px_rgba(2,6,23,0.38)] ${
-        collapsed ? 'px-3 py-3' : isSidebar ? 'px-4 py-3.5' : 'px-4 py-3'
+        collapsed ? 'px-3 py-3' : isSidebar ? 'px-4 py-3.5' : 'px-3 py-2.5 sm:px-4 sm:py-3'
       }`}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.18),transparent_35%)] opacity-90" />
@@ -108,21 +109,21 @@ export function NexusLogo({ collapsed = false, mode = 'sidebar' }: NexusLogoProp
       >
         <span
           className={`grid shrink-0 place-items-center rounded-[22px] border border-white/12 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(255,255,255,0.04))] shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] ${
-            collapsed ? 'h-12 w-12' : isSidebar ? 'h-14 w-14' : 'h-12 w-12'
+            collapsed ? 'h-12 w-12' : isSidebar ? 'h-14 w-14' : 'h-10 w-10 sm:h-12 sm:w-12'
           }`}
         >
           <NexusMark
             className={`object-contain drop-shadow-[0_12px_22px_rgba(56,189,248,0.26)] ${
-              collapsed ? 'h-10 w-10' : isSidebar ? 'h-11 w-11' : 'h-10 w-10'
+              collapsed ? 'h-10 w-10' : isSidebar ? 'h-11 w-11' : 'h-8.5 w-8.5 sm:h-10 sm:w-10'
             }`}
           />
         </span>
 
         {!collapsed ? (
-          <div className="min-w-0">
+          <div className={`min-w-0 ${isNavbar ? 'max-w-[124px] sm:max-w-none' : ''}`}>
             <strong
               className={`block text-balance font-black uppercase leading-tight tracking-[0.08em] text-white ${
-                isSidebar ? 'text-[0.9rem]' : 'text-[0.82rem]'
+                isSidebar ? 'text-[0.9rem]' : 'text-[0.68rem] sm:text-[0.82rem]'
               }`}
             >
               Librería Digital Nexus

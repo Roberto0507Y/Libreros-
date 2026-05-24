@@ -63,9 +63,9 @@ export function ProductCreatePage({
   subcategories,
 }: ProductCreatePageProps) {
   const PRODUCTS_PER_PAGE = 12;
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [form, setForm] = useState({
     name: '',
@@ -149,11 +149,20 @@ export function ProductCreatePage({
       primaryImage: '',
       secondaryImage: '',
     });
-    setActiveTab('list');
+    setIsCreateModalOpen(false);
   };
 
   const closeEditModal = () => {
     setEditingProductId(null);
+    resetForm();
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetForm();
+  };
+
+  const resetForm = () => {
     setForm({
       name: '',
       description: '',
@@ -216,26 +225,6 @@ export function ProductCreatePage({
     await onDelete(productId);
   };
 
-  const resetForm = () => {
-    setForm({
-      name: '',
-      description: '',
-      brandId: '',
-      categoryId: '',
-      subcategoryId: '',
-      purchasePrice: '',
-      salePrice: '',
-      initialStock: '',
-      primaryImage: '',
-      secondaryImage: '',
-    });
-    setActiveImage('primaryImage');
-    setImageNames({
-      primaryImage: '',
-      secondaryImage: '',
-    });
-  };
-
   const visibleProducts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     if (!normalizedQuery) return products;
@@ -291,19 +280,14 @@ export function ProductCreatePage({
           </p>
           <h2 className="m-0 text-2xl font-bold text-slate-900">Administra tus productos</h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            Consulta los productos creados y usa el boton Crear producto para abrir la pestaña del formulario.
+            Consulta los productos creados y usa el boton Crear producto para abrir la mini ventana del formulario.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'list'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
+            className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition"
             onClick={() => {
-              setActiveTab('list');
               setCurrentPage(1);
             }}
             type="button"
@@ -311,14 +295,10 @@ export function ProductCreatePage({
             Productos creados
           </button>
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'create'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             onClick={() => {
               resetForm();
-              setActiveTab('create');
+              setIsCreateModalOpen(true);
             }}
             type="button"
           >
@@ -327,8 +307,7 @@ export function ProductCreatePage({
         </div>
       </section>
 
-      {activeTab === 'list' ? (
-        <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)] md:px-6">
+      <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.06)] md:px-6">
           <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
@@ -460,348 +439,337 @@ export function ProductCreatePage({
             <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
               <strong className="block text-slate-900">No hay productos para este filtro.</strong>
               <span className="mt-2 block text-sm text-slate-500">
-                Usa la pestaña Crear producto para registrar uno nuevo.
+                Usa el boton Crear producto para registrar uno nuevo.
               </span>
             </div>
           ) : null}
-        </section>
-      ) : (
-        <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)] md:px-8 md:py-8">
-          <div className="mb-5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
-              {editingProductId ? 'Editar producto' : 'Nuevo producto'}
-            </p>
-            <h2 className="m-0 text-2xl font-bold text-slate-900">
-              Crea una ficha completa del producto
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm text-slate-600">
-              Sube dos fotos, agrega una descripcion detallada y define el precio para que el
-              inventario quede presentado como una ficha real de catalogo.
-            </p>
+      </section>
+
+      <EditSheetModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        subtitle="Crea la ficha del producto sin salir del listado principal."
+        title="Crear producto"
+        widthClassName="max-w-[1400px]"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeCreateModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !form.name.trim() || !form.categoryId || !form.subcategoryId || !form.primaryImage || !form.secondaryImage}
+              form="create-product-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO PRODUCTO...' : 'CREAR PRODUCTO'}
+            </button>
           </div>
-
-          <form className="grid gap-8 2xl:grid-cols-[minmax(0,0.95fr)_minmax(520px,1fr)]" onSubmit={handleSubmit}>
-            <div className="grid gap-6 rounded-[26px] border border-slate-200 bg-slate-50/80 p-5 md:p-6">
-              <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
-                    Imagenes
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold text-slate-900">Fotos del producto</h3>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Foto principal
-                    <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
-                      <input
-                        accept="image/png,image/jpeg,image/webp"
-                        className="absolute inset-0 cursor-pointer opacity-0"
-                        onChange={(event) => void handleImageChange(event, 'primaryImage')}
-                        required
-                        type="file"
-                      />
-                      <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
-                        Elegir archivo
-                      </span>
-                      <span className="min-w-0 truncate text-sm font-medium text-slate-500">
-                        {imageNames.primaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
-                      </span>
-                    </span>
-                  </label>
-
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Foto secundaria
-                    <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
-                      <input
-                        accept="image/png,image/jpeg,image/webp"
-                        className="absolute inset-0 cursor-pointer opacity-0"
-                        onChange={(event) => void handleImageChange(event, 'secondaryImage')}
-                        required
-                        type="file"
-                      />
-                      <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
-                        Elegir archivo
-                      </span>
-                      <span className="min-w-0 truncate text-sm font-medium text-slate-500">
-                        {imageNames.secondaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
-                      </span>
-                    </span>
-                  </label>
-                </div>
+        }
+      >
+        <form className="grid gap-8 2xl:grid-cols-[minmax(0,0.95fr)_minmax(520px,1fr)]" id="create-product-form" onSubmit={handleSubmit}>
+          <div className="grid gap-6 rounded-[26px] border border-slate-200 bg-slate-50/80 p-5 md:p-6">
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Imagenes
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Fotos del producto</h3>
               </div>
 
-              <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
-                    Informacion general
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold text-slate-900">Datos principales</h3>
-                </div>
-
+              <div className="grid gap-4 lg:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                  Nombre del producto
-                  <input
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                    name="name"
-                    onChange={handleChange}
-                    placeholder="Ej. Calculadora cientifica Casio FX-570LA Plus"
-                    required
-                    type="text"
-                    value={form.name}
-                  />
-                </label>
-
-                <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                  Detalles del producto
-                  <textarea
-                    className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:min-h-40"
-                    name="description"
-                    onChange={handleChange}
-                    placeholder={'Escribe una linea por detalle.\nEj. 417 funciones\nBateria AAA\nIdeal para estudiantes'}
-                    rows={7}
-                    value={form.description}
-                  />
-                </label>
-              </div>
-
-              <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
-                    Clasificacion
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold text-slate-900">Marca y categoria</h3>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Marca
-                    <select
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      name="brandId"
-                      onChange={handleChange}
-                      value={form.brandId}
-                    >
-                      <option value="">Sin marca</option>
-                      {brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>
-                          {brand.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Categoria
-                    <select
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      name="categoryId"
-                      onChange={handleChange}
+                  Foto principal
+                  <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                    <input
+                      accept="image/png,image/jpeg,image/webp"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(event) => void handleImageChange(event, 'primaryImage')}
                       required
-                      value={form.categoryId}
-                    >
-                      <option value="">Selecciona una categoria</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                      type="file"
+                    />
+                    <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                      Elegir archivo
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                      {imageNames.primaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                    </span>
+                  </span>
+                </label>
 
                 <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                  Subcategoria
+                  Foto secundaria
+                  <span className="relative flex min-h-[92px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/40">
+                    <input
+                      accept="image/png,image/jpeg,image/webp"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(event) => void handleImageChange(event, 'secondaryImage')}
+                      required
+                      type="file"
+                    />
+                    <span className="inline-flex shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(37,99,235,0.18)]">
+                      Elegir archivo
+                    </span>
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-500">
+                      {imageNames.secondaryImage || 'Selecciona una imagen PNG, JPG o WEBP'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Informacion general
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Datos principales</h3>
+              </div>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Nombre del producto
+                <input
+                  autoFocus
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  name="name"
+                  onChange={handleChange}
+                  placeholder="Ej. Calculadora cientifica Casio FX-570LA Plus"
+                  required
+                  type="text"
+                  value={form.name}
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Detalles del producto
+                <textarea
+                  className="min-h-32 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:min-h-40"
+                  name="description"
+                  onChange={handleChange}
+                  placeholder={'Escribe una linea por detalle.\nEj. 417 funciones\nBateria AAA\nIdeal para estudiantes'}
+                  rows={7}
+                  value={form.description}
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Clasificacion
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Marca y categoria</h3>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Marca
                   <select
                     className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                    name="subcategoryId"
+                    name="brandId"
+                    onChange={handleChange}
+                    value={form.brandId}
+                  >
+                    <option value="">Sin marca</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Categoria
+                  <select
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    name="categoryId"
                     onChange={handleChange}
                     required
-                    value={form.subcategoryId}
+                    value={form.categoryId}
                   >
-                    <option value="">
-                      {form.categoryId ? 'Selecciona una subcategoria' : 'Primero selecciona una categoria'}
-                    </option>
-                    {filteredSubcategories.map((subcategory) => (
-                      <option key={subcategory.id} value={subcategory.id}>
-                        {subcategory.nombre}
+                    <option value="">Selecciona una categoria</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.nombre}
                       </option>
                     ))}
                   </select>
                 </label>
               </div>
 
-              <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
-                    Valores
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold text-slate-900">Precios y stock</h3>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-3">
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Precio compra
-                    <input
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      min="0"
-                      name="purchasePrice"
-                      onChange={handleChange}
-                      required
-                      step="0.01"
-                      type="number"
-                      value={form.purchasePrice}
-                    />
-                  </label>
-
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Precio venta
-                    <input
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      min="0"
-                      name="salePrice"
-                      onChange={handleChange}
-                      required
-                      step="0.01"
-                      type="number"
-                      value={form.salePrice}
-                    />
-                  </label>
-
-                  <label className="grid gap-2 text-sm font-semibold text-slate-700">
-                    Stock inicial
-                    <input
-                      className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                      min="0"
-                      name="initialStock"
-                      onChange={handleChange}
-                      step="1"
-                      type="number"
-                      value={form.initialStock}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <button
-                className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isSaving}
-                type="submit"
-              >
-                {isSaving ? 'GUARDANDO PRODUCTO...' : 'CREAR PRODUCTO'}
-              </button>
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Subcategoria
+                <select
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  name="subcategoryId"
+                  onChange={handleChange}
+                  required
+                  value={form.subcategoryId}
+                >
+                  <option value="">
+                    {form.categoryId ? 'Selecciona una subcategoria' : 'Primero selecciona una categoria'}
+                  </option>
+                  {filteredSubcategories.map((subcategory) => (
+                    <option key={subcategory.id} value={subcategory.id}>
+                      {subcategory.nombre}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
 
-            <aside className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-7">
-              <div className="mb-4 text-xs text-slate-500">
-                Inicio <span className="mx-1">→</span> {selectedBrand} <span className="mx-1">→</span>{' '}
-                {selectedCategory} <span className="mx-1">→</span> {selectedSubcategory}
+            <div className="grid gap-5 rounded-[22px] border border-slate-200 bg-white p-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-blue-600">
+                  Valores
+                </p>
+                <h3 className="mt-2 text-lg font-bold text-slate-900">Precios y stock</h3>
               </div>
 
-              <h3 className="border-b border-slate-200 pb-4 text-[1.7rem] font-bold uppercase leading-tight text-blue-900">
-                {form.name || 'NOMBRE DEL PRODUCTO'}
-              </h3>
+              <div className="grid gap-4 md:grid-cols-3">
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Precio compra
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="purchasePrice"
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    type="number"
+                    value={form.purchasePrice}
+                  />
+                </label>
 
-              <div className="mt-7 grid gap-7 xl:grid-cols-[72px_minmax(0,1fr)]">
-                <div className="grid gap-3">
-                  {gallery.map((image) => (
-                    <button
-                      className={`grid h-[72px] w-[56px] place-items-center overflow-hidden rounded-xl border bg-white transition ${
-                        activeImage === image.id
-                          ? 'border-blue-500 ring-2 ring-blue-100'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                      key={image.id}
-                      onClick={() => setActiveImage(image.id)}
-                      type="button"
-                    >
-                      {image.src ? (
-                        <img alt={image.label} className="h-full w-full object-cover" src={image.src} />
-                      ) : (
-                        <span className="px-2 text-center text-[11px] font-semibold text-slate-400">
-                          {image.label}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Precio venta
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="salePrice"
+                    onChange={handleChange}
+                    required
+                    step="0.01"
+                    type="number"
+                    value={form.salePrice}
+                  />
+                </label>
+
+                <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                  Stock inicial
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                    min="0"
+                    name="initialStock"
+                    onChange={handleChange}
+                    step="1"
+                    type="number"
+                    value={form.initialStock}
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <aside className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-7">
+            <div className="mb-4 text-xs text-slate-500">
+              Inicio <span className="mx-1">→</span> {selectedBrand} <span className="mx-1">→</span>{' '}
+              {selectedCategory} <span className="mx-1">→</span> {selectedSubcategory}
+            </div>
+
+            <h3 className="border-b border-slate-200 pb-4 text-[1.7rem] font-bold uppercase leading-tight text-blue-900">
+              {form.name || 'NOMBRE DEL PRODUCTO'}
+            </h3>
+
+            <div className="mt-7 grid gap-7 xl:grid-cols-[72px_minmax(0,1fr)]">
+              <div className="grid gap-3">
+                {gallery.map((image) => (
+                  <button
+                    className={`grid h-[72px] w-[56px] place-items-center overflow-hidden rounded-xl border bg-white transition ${
+                      activeImage === image.id
+                        ? 'border-blue-500 ring-2 ring-blue-100'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                    key={image.id}
+                    onClick={() => setActiveImage(image.id)}
+                    type="button"
+                  >
+                    {image.src ? (
+                      <img alt={image.label} className="h-full w-full object-cover" src={image.src} />
+                    ) : (
+                      <span className="px-2 text-center text-[11px] font-semibold text-slate-400">
+                        {image.label}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid gap-6">
+                <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-slate-200 bg-slate-50 p-8 lg:min-h-[520px]">
+                  {currentImage ? (
+                    <img
+                      alt={form.name || 'Vista previa del producto'}
+                      className="max-h-[430px] w-full object-contain"
+                      src={currentImage}
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center text-sm font-medium text-slate-400">
+                      Sube las dos fotos para ver la ficha del producto
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid gap-6">
-                  <div className="grid min-h-[420px] place-items-center rounded-[24px] border border-slate-200 bg-slate-50 p-8 lg:min-h-[520px]">
-                    {currentImage ? (
-                      <img
-                        alt={form.name || 'Vista previa del producto'}
-                        className="max-h-[430px] w-full object-contain"
-                        src={currentImage}
-                      />
+                <div className="grid gap-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-6">
+                  <div className="border-b border-slate-200 pb-3">
+                    <div className="flex flex-wrap gap-5 text-xs font-semibold uppercase tracking-wide text-slate-700">
+                      <span className="border-b-2 border-amber-400 pb-2 text-slate-900">Descripcion</span>
+                      <span className="pb-2 text-slate-400">Detalles</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 text-sm leading-7 text-slate-700">
+                    {detailLines.length ? (
+                      <ul className="list-disc space-y-1 pl-5">
+                        {detailLines.map((line) => (
+                          <li key={line}>{line}</li>
+                        ))}
+                      </ul>
                     ) : (
-                      <div className="grid h-full w-full place-items-center rounded-2xl border-2 border-dashed border-slate-200 bg-white text-center text-sm font-medium text-slate-400">
-                        Sube las dos fotos para ver la ficha del producto
-                      </div>
+                      <p>
+                        Aqui se mostrara la descripcion detallada del producto, ideal para presentar
+                        medidas, funciones, material o beneficios.
+                      </p>
                     )}
                   </div>
 
-                  <div className="grid gap-6 rounded-[24px] border border-slate-200 bg-slate-50/70 p-6">
-                    <div className="border-b border-slate-200 pb-3">
-                      <div className="flex flex-wrap gap-5 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                        <span className="border-b-2 border-amber-400 pb-2 text-slate-900">Descripcion</span>
-                        <span className="pb-2 text-slate-400">Detalles</span>
+                  <div className="grid gap-4 border-t border-blue-200 pt-5 md:grid-cols-[minmax(0,1fr)_170px]">
+                    <div className="grid gap-3">
+                      <div className="text-[2rem] font-bold text-slate-900">Q{form.salePrice || '0.00'}</div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
+                        En existencia
                       </div>
+                      <div className="text-sm text-slate-500">Compra: Q{form.purchasePrice || '0.00'}</div>
                     </div>
 
-                    <div className="space-y-3 text-sm leading-7 text-slate-700">
-                      {detailLines.length ? (
-                        <ul className="list-disc space-y-1 pl-5">
-                          {detailLines.map((line) => (
-                            <li key={line}>{line}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>
-                          Aqui se mostrara la descripcion detallada del producto, ideal para presentar
-                          medidas, funciones, material o beneficios.
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="grid gap-4 border-t border-blue-200 pt-5 md:grid-cols-[minmax(0,1fr)_170px]">
-                      <div className="grid gap-3">
-                        <div className="text-[2rem] font-bold text-slate-900">Q{form.salePrice || '0.00'}</div>
-                        <div className="text-xs font-semibold uppercase tracking-wide text-emerald-600">
-                          En existencia
-                        </div>
-                        <div className="text-sm text-slate-500">Compra: Q{form.purchasePrice || '0.00'}</div>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500">
-                        <div className="font-semibold text-slate-700">{selectedBrand}</div>
-                        <div className="mt-2">Stock: {form.initialStock || '0'}</div>
-                        <div className="mt-2">{selectedCategory}</div>
-                        <div className="mt-2">{selectedSubcategory}</div>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <button
-                        className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white"
-                        type="button"
-                      >
-                        Guardar en inventario
-                      </button>
-                      <button
-                        className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white"
-                        type="button"
-                      >
-                        Vista de ficha
-                      </button>
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-500">
+                      <div className="font-semibold text-slate-700">{selectedBrand}</div>
+                      <div className="mt-2">Stock: {form.initialStock || '0'}</div>
+                      <div className="mt-2">{selectedCategory}</div>
+                      <div className="mt-2">{selectedSubcategory}</div>
                     </div>
                   </div>
                 </div>
               </div>
-            </aside>
-          </form>
-        </section>
-      )}
+            </div>
+          </aside>
+        </form>
+      </EditSheetModal>
 
       <EditSheetModal
         isOpen={editingProductId !== null}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type MouseEventHandler } from 'react';
 import { jsPDF } from 'jspdf';
-import { ChevronDown, Eye, EyeOff, Grid2x2, Lock, LogOut, Mail, Menu, Package2, ShoppingCart, Tags, UserCircle2, UserRound } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronDown, Eye, EyeOff, Grid2x2, Lock, LogOut, Mail, Menu, Package2, Search, ShoppingCart, Tags, UserCircle2, UserRound } from 'lucide-react';
 
 import { API_URL } from '../api/client';
 import { login, registerCustomer, requestPasswordReset } from '../api/auth';
@@ -720,10 +721,6 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
     .map((line) => line.trim())
     .filter(Boolean);
   const activeHero = heroSlides[currentHeroSlide];
-  const sideHeroSlides = [
-    heroSlides[(currentHeroSlide + 1) % heroSlides.length],
-    heroSlides[(currentHeroSlide + 2) % heroSlides.length],
-  ];
   const simulatedOrderLabel = useMemo(
     () => `ORD-${session?.user.id ?? 0}-${cartCount || 1}-${Math.round(cartTotal || 0)}`,
     [cartCount, cartTotal, session?.user.id],
@@ -789,7 +786,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
   const isStandaloneBrandTab = isInitialBrandProductsRoute;
   const isStandaloneCategoryTab = isInitialCategoryProductsRoute;
   const productGridClass =
-    'grid justify-center gap-5 [grid-template-columns:repeat(auto-fit,minmax(248px,288px))]';
+    'grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 xl:grid-cols-4';
   const isHomeNavActive = view === 'brands' && !isCatalogTab && !isProductDetailTab;
   const isCategoriesNavActive = view === 'categories' || view === 'category-products';
   const isProductsNavActive = view === 'all-products' || (view === 'product-detail' && productBackView === 'all-products');
@@ -1584,10 +1581,10 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
       <div className="pointer-events-none absolute inset-0 z-0 storefront-grid opacity-40" />
 
       <header className="sticky top-0 z-40 px-3 pt-3 md:px-5 md:pt-4">
-        <div className="mx-auto max-w-7xl rounded-[30px] border border-white/10 bg-[linear-gradient(90deg,rgba(16,30,72,0.88),rgba(33,64,154,0.84),rgba(91,33,182,0.82))] text-white shadow-[0_26px_60px_rgba(15,23,42,0.22)] backdrop-blur-2xl">
-          <div className="flex min-h-[78px] items-center justify-between gap-3 px-4 py-3 md:px-5 lg:px-6">
+        <div className="mx-auto max-w-7xl rounded-[22px] border border-white/10 bg-[linear-gradient(90deg,rgba(16,30,72,0.92),rgba(33,64,154,0.88),rgba(91,33,182,0.84))] text-white shadow-[0_26px_60px_rgba(15,23,42,0.22)] backdrop-blur-2xl sm:rounded-[30px]">
+          <div className="flex min-h-[66px] items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 md:min-h-[78px] md:px-5 lg:px-6">
             <button
-              className="flex min-w-0 items-center gap-3 text-left"
+              className="flex min-w-0 flex-1 items-center gap-3 text-left md:flex-none"
               onClick={() => {
                 setView('brands');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1629,7 +1626,19 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
 
             <div className="flex items-center gap-2 md:gap-3">
               <button
-                className="relative inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-3.5 text-sm font-medium text-white/90 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/14 hover:text-white"
+                aria-label="Buscar productos"
+                className="inline-grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white transition-all duration-300 hover:bg-white/14 active:scale-95 md:hidden"
+                onClick={() => {
+                  handleOpenAllProducts();
+                  setIsMobileMenuOpen(false);
+                }}
+                type="button"
+              >
+                <Search className="h-4.5 w-4.5" />
+              </button>
+
+              <button
+                className="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10 px-0 text-sm font-medium text-white/90 transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/14 hover:text-white md:h-11 md:w-auto md:gap-2 md:px-3.5"
                 onClick={() => setIsCartOpen(true)}
                 type="button"
               >
@@ -1733,7 +1742,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
 
               <button
                 aria-label="Abrir menú"
-                className="inline-grid h-11 w-11 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white transition-all duration-300 hover:bg-white/14 active:scale-95 md:hidden"
+                className="inline-grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/10 text-white transition-all duration-300 hover:bg-white/14 active:scale-95 md:hidden"
                 onClick={() => setIsMobileMenuOpen((current) => !current)}
                 type="button"
               >
@@ -1863,10 +1872,10 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
       </header>
 
       <main
-        className={`relative z-10 mx-auto grid gap-8 ${
+        className={`relative z-10 mx-auto grid gap-6 ${
           isAccountTab
             ? 'w-full max-w-none px-0 py-0'
-            : 'max-w-7xl px-4 py-8 md:px-6 lg:gap-10 lg:py-10'
+            : 'max-w-7xl px-3 py-5 sm:px-4 sm:py-6 md:px-6 md:py-8 lg:gap-10 lg:py-10'
         }`}
       >
         {isAccountTab && session ? (
@@ -1878,18 +1887,55 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         ) : (
           <>
         {!isCatalogTab && !isProductDetailTab && !isStandaloneCategoryTab && !isStandaloneBrandTab ? (
-        <Card className="order-1 overflow-hidden rounded-[40px] border border-white/70 bg-white/78 shadow-[0_35px_90px_rgba(15,23,42,0.08)]" id="benefits-section" ref={benefitsSectionRef}>
-          <div className="grid gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-            <div className="group relative overflow-hidden rounded-[30px] bg-slate-100 shadow-[0_30px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/80">
-              <img
+        <Card className="order-1 overflow-hidden rounded-[30px] border border-white/70 bg-white/78 shadow-[0_35px_90px_rgba(15,23,42,0.08)] sm:rounded-[40px]" id="benefits-section" ref={benefitsSectionRef}>
+          <div className="grid gap-4 p-3 sm:p-4 md:p-6">
+            <motion.div
+              className="group relative overflow-hidden rounded-[30px] bg-slate-100 shadow-[0_30px_80px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/80"
+              initial={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+            >
+              <motion.img
+                key={activeHero.id}
                 alt={`Publicidad ${currentHeroSlide + 1}`}
-                className="h-[320px] w-full object-cover transition duration-700 group-hover:scale-[1.025] md:h-[420px] xl:h-[550px]"
+                animate={{ opacity: 1, scale: 1 }}
+                className="h-[210px] w-full object-cover object-center transition duration-700 group-hover:scale-[1.025] sm:h-[260px] md:h-[420px] xl:h-[550px]"
+                initial={{ opacity: 0.88, scale: 1.02 }}
                 src={activeHero.image}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
               />
               <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.08),transparent_34%,rgba(15,23,42,0.18))]" />
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(2,6,23,0.62))] md:hidden" />
               <div className="animate-shimmer-pan pointer-events-none absolute inset-y-0 left-[-18%] w-[28%] -skew-x-12 bg-white/10 blur-2xl" />
 
-              <div className="absolute bottom-5 left-5 flex items-center gap-2 md:bottom-7 md:left-7">
+              <div className="absolute left-4 top-4 md:hidden">
+                <span className="inline-flex rounded-full bg-white/92 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-900 shadow-[0_10px_20px_rgba(15,23,42,0.16)]">
+                  Lanzamientos
+                </span>
+              </div>
+
+              <div className="absolute inset-x-0 bottom-0 p-4 md:hidden">
+                <div className="flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[1.35rem] font-black leading-7 tracking-[-0.04em] text-white">
+                      Compra online
+                    </div>
+                    <p className="mt-1 text-xs text-white/82">
+                      Explora novedades y encuentra productos en minutos.
+                    </p>
+                  </div>
+                  <button
+                    className="shrink-0 rounded-full bg-[linear-gradient(135deg,#f59e0b,#f97316)] px-4 py-2 text-xs font-bold text-white shadow-[0_14px_24px_rgba(249,115,22,0.3)]"
+                    onClick={handleOpenAllProducts}
+                    type="button"
+                  >
+                    Ver catálogo
+                  </button>
+                </div>
+              </div>
+
+              <div className="absolute bottom-4 left-4 flex items-center gap-2 sm:bottom-5 sm:left-5 md:bottom-7 md:left-7">
                 {heroSlides.map((slide, index) => (
                   <button
                     key={slide.id}
@@ -1933,33 +1979,50 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
               >
                 Ver productos
               </button>
-            </div>
+            </motion.div>
 
-            <div className="grid gap-5">
-              {sideHeroSlides.map((slide, index) => (
-                <button
-                  key={`${slide.id}-${index}`}
-                  className="group relative overflow-hidden rounded-[26px] bg-slate-100 shadow-[0_22px_52px_rgba(15,23,42,0.10)] ring-1 ring-slate-200/80 transition hover:-translate-y-1"
-                  onClick={() => setCurrentHeroSlide(heroSlides.findIndex((entry) => entry.id === slide.id))}
-                  type="button"
-                >
-                  <img
-                    alt={`Publicidad lateral ${index + 1}`}
-                    className="h-[188px] w-full object-cover transition duration-500 group-hover:scale-[1.05] md:h-[212px] xl:h-[265px]"
-                    src={slide.image}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950/12 via-transparent to-slate-950/22" />
-                  <div className="absolute bottom-5 left-5">
-                    <span className="inline-flex rounded-full border border-white/70 bg-white/94 px-5 py-2 text-sm font-semibold text-slate-800 shadow-[0_12px_24px_rgba(15,23,42,0.16)]">
-                      {index === 0 ? 'Ver catálogo' : 'Ver'}
-                    </span>
-                  </div>
-                </button>
-              ))}
+            <div className="mt-3 flex items-center justify-center gap-2 md:hidden">
+              <button
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-700 shadow-[0_12px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-slate-50"
+                onClick={() =>
+                  setCurrentHeroSlide((current) =>
+                    current === 0 ? heroSlides.length - 1 : current - 1,
+                  )
+                }
+                type="button"
+              >
+                ←
+              </button>
+              <div className="inline-flex min-w-[110px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-[0_12px_24px_rgba(15,23,42,0.08)]">
+                {currentHeroSlide + 1} / {heroSlides.length}
+              </div>
+              <button
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl text-slate-700 shadow-[0_12px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:bg-slate-50"
+                onClick={() => setCurrentHeroSlide((current) => (current + 1) % heroSlides.length)}
+                type="button"
+              >
+                →
+              </button>
             </div>
           </div>
 
-          <div className="grid gap-4 bg-[linear-gradient(90deg,#1297ea,#2563eb_52%,#1d4ed8)] px-5 py-6 text-white md:grid-cols-2 md:px-8 xl:grid-cols-4">
+          <div className="mt-4 flex gap-2 overflow-x-auto px-1 pb-1 md:hidden">
+            {[
+              'Envío gratis',
+              'Compra segura',
+              'Recoge en tienda',
+              'Atención rápida',
+            ].map((item) => (
+              <span
+                key={item}
+                className="inline-flex shrink-0 items-center rounded-full border border-sky-200/70 bg-white px-4 py-2 text-xs font-semibold tracking-[0.02em] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+
+          <div className="hidden gap-4 bg-[linear-gradient(90deg,#1297ea,#2563eb_52%,#1d4ed8)] px-5 py-6 text-white md:grid md:grid-cols-2 md:px-8 xl:grid-cols-4">
             <article className="rounded-[24px] border border-white/15 bg-white/8 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition hover:-translate-y-1">
               <div className="flex items-start gap-4">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 border-white/85 bg-white/8">
@@ -2020,17 +2083,35 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         ) : null}
 
         {!isProductDetailTab && !isStandaloneCategoryTab && !isStandaloneBrandTab ? (
-        <Card className="order-3 px-6 py-8" id="featured-products-section" ref={featuredProductsSectionRef}>
-          <SectionTitle
-            actions={
-              <Button onClick={handleOpenAllProducts} variant="cta">
-                Ver productos +
-              </Button>
-            }
-            description="Una selección compacta y visual de productos destacados para descubrir el catálogo más rápido."
-            eyebrow="Selección destacada"
-            title="Productos recomendados"
-          />
+        <Card className="order-3 px-3 py-5 sm:px-6 sm:py-8" id="featured-products-section" ref={featuredProductsSectionRef}>
+          <div className="md:hidden">
+            <div className="flex items-center justify-between gap-3 px-1">
+              <div>
+                <h2 className="text-[1.45rem] font-extrabold tracking-[-0.04em] text-slate-950">Productos destacados</h2>
+                <p className="mt-1 text-xs text-slate-500">Listos para comprar</p>
+              </div>
+              <button
+                className="inline-flex h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 shadow-[0_10px_18px_rgba(15,23,42,0.05)]"
+                onClick={handleOpenAllProducts}
+                type="button"
+              >
+                Ver todo
+              </button>
+            </div>
+          </div>
+
+          <div className="hidden md:block">
+            <SectionTitle
+              actions={
+                <Button onClick={handleOpenAllProducts} variant="cta">
+                  Ver productos +
+                </Button>
+              }
+              description="Una selección compacta y visual de productos destacados para descubrir el catálogo más rápido."
+              eyebrow="Selección destacada"
+              title="Productos recomendados"
+            />
+          </div>
 
           <div className="mt-8">
             {featuredProducts.length ? (
@@ -2480,7 +2561,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
         ) : null}
 
         {!isCatalogTab && !isProductDetailTab && !isStandaloneBrandTab ? (
-          <Card className="order-2 rounded-[34px] border border-white/70 bg-white/85 px-6 py-8 shadow-[0_30px_80px_rgba(15,23,42,0.06)] backdrop-blur" id="categories-section" ref={categoriesSectionRef}>
+          <Card className="order-2 rounded-[34px] border border-white/70 bg-white/85 px-4 py-6 shadow-[0_30px_80px_rgba(15,23,42,0.06)] backdrop-blur sm:px-6 sm:py-8" id="categories-section" ref={categoriesSectionRef}>
             {isLoading ? (
               <div className="empty-state compact">
                 <strong>Cargando categorías y productos...</strong>
@@ -2489,22 +2570,29 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
               <>
                 {view === 'categories' || view === 'brands' || view === 'brand-products' ? (
                   <>
-                  <SectionTitle
-                    align="center"
-                    eyebrow="Categorías"
-                    title="Compra por categoría"
-                    description="Agrupa los productos de forma visual y clara para una exploración mucho más rápida."
-                  />
+                  <div className="md:hidden text-center">
+                    <h2 className="text-[1.95rem] font-extrabold tracking-[-0.04em] text-slate-950">Categorías</h2>
+                    <p className="mt-2 text-sm text-slate-500">Explora el catálogo por tipo de producto.</p>
+                  </div>
 
-                    <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="hidden md:block">
+                    <SectionTitle
+                      align="center"
+                      eyebrow="Categorías"
+                      title="Compra por categoría"
+                      description="Agrupa los productos de forma visual y clara para una exploración mucho más rápida."
+                    />
+                  </div>
+
+                    <div className="mt-6 flex snap-x gap-3 overflow-x-auto pb-2 md:mt-8 md:grid md:gap-4 md:overflow-visible md:pb-0 sm:grid-cols-2 xl:grid-cols-4">
                       {visibleCategories.map((category) => (
                         <button
                           key={category.id}
                           onClick={() => handleCategoryOpen(category.id)}
                           type="button"
-                          className="group relative flex min-h-[220px] flex-col items-center justify-center overflow-hidden rounded-[26px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fbff)] px-4 py-5 text-center shadow-[0_16px_38px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-sky-200 hover:shadow-[0_24px_52px_rgba(14,165,233,0.12)]"
+                          className="group relative flex min-h-[124px] min-w-[96px] shrink-0 snap-start flex-col items-center justify-start overflow-hidden rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#f8fbff)] px-3 py-4 text-center shadow-[0_16px_38px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1.5 hover:border-sky-200 hover:shadow-[0_24px_52px_rgba(14,165,233,0.12)] md:min-h-[220px] md:min-w-0 md:justify-center md:px-4 md:py-5"
                         >
-                          <div className="grid h-[102px] w-[102px] place-items-center overflow-hidden rounded-full bg-slate-100 ring-8 ring-sky-50/70">
+                          <div className="grid h-[58px] w-[58px] place-items-center overflow-hidden rounded-full bg-slate-100 ring-4 ring-sky-50/70 md:h-[102px] md:w-[102px] md:ring-8">
                             {category.imagen ? (
                               <img
                                 alt={category.nombre}
@@ -2517,7 +2605,7 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
                               </span>
                             )}
                           </div>
-                          <strong className="mt-4 text-[1.05rem] font-bold uppercase leading-6 tracking-[0.04em] text-blue-950">
+                          <strong className="mt-3 text-xs font-bold uppercase leading-5 tracking-[0.08em] text-blue-950 md:mt-4 md:text-[1.05rem] md:leading-6 md:tracking-[0.04em]">
                             {category.nombre}
                           </strong>
                         </button>
@@ -2640,6 +2728,30 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
           </>
         )}
       </main>
+
+      {!isAccountTab && !isCartOpen && cartCount > 0 ? (
+        <div className="fixed inset-x-3 bottom-4 z-30 md:hidden">
+          <button
+            className="flex w-full items-center justify-between rounded-[24px] bg-[linear-gradient(135deg,var(--brand-primary),var(--brand-secondary))] px-4 py-3 text-white shadow-[0_22px_50px_rgba(37,99,235,0.3)]"
+            onClick={() => setIsCartOpen(true)}
+            type="button"
+          >
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/14">
+                <ShoppingCart className="h-4.5 w-4.5" />
+              </span>
+              <div className="text-left">
+                <div className="text-sm font-bold">Ver carrito</div>
+                <div className="text-xs text-white/80">{cartCount} producto(s)</div>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-white/70">Total</div>
+              <div className="text-base font-black">{currency.format(cartTotal)}</div>
+            </div>
+          </button>
+        </div>
+      ) : null}
 
       <Drawer
         isOpen={isFiltersDrawerOpen}

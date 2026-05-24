@@ -29,7 +29,7 @@ export function CategoriesPage({
   onDelete,
   onUpdate,
 }: CategoriesPageProps) {
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,7 +63,7 @@ export function CategoriesPage({
 
     await onCreate({ name, image });
 
-    setActiveTab('list');
+    setIsCreateModalOpen(false);
     resetForm();
   };
 
@@ -88,6 +88,11 @@ export function CategoriesPage({
     setEditingCategoryId(null);
     setEditName('');
     setEditImage('');
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetForm();
   };
 
   const handleEditImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -117,30 +122,22 @@ export function CategoriesPage({
         </p>
         <h2 className="m-0 text-2xl font-bold text-slate-900">Administra tus categorias</h2>
         <p className="mt-2 max-w-3xl text-sm text-slate-600">
-          Consulta las categorias creadas y usa el boton Crear categoria para abrir la pestaña del formulario.
+          Consulta las categorias creadas y usa el boton Crear categoria para abrir la mini ventana del formulario.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-3">
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'list'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-            onClick={() => setActiveTab('list')}
+            className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition"
+            onClick={() => setSearchQuery('')}
             type="button"
           >
             Categorias creadas
           </button>
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'create'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             onClick={() => {
               resetForm();
-              setActiveTab('create');
+              setIsCreateModalOpen(true);
             }}
             type="button"
           >
@@ -149,91 +146,7 @@ export function CategoriesPage({
         </div>
       </section>
 
-      {activeTab === 'create' ? (
-        <section className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-          <article className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
-          <div className="mb-5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
-              Nueva categoria
-            </p>
-            <h3 className="text-xl font-bold text-slate-900">
-              Agregar categoria
-            </h3>
-          </div>
-
-          <form className="grid gap-4" onSubmit={handleSubmit}>
-            <label className="grid gap-2 text-sm font-semibold text-slate-700">
-              Nombre de la categoria
-              <input
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Ej. Escolar"
-                required
-                type="text"
-                value={name}
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm font-semibold text-slate-700">
-              Imagen de la categoria
-              <input
-                accept="image/png,image/jpeg,image/webp"
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
-                onChange={(event) => void handleImageChange(event)}
-                required={!editingCategoryId && !image}
-                type="file"
-              />
-            </label>
-
-            {image ? (
-              <div className="grid h-40 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <img
-                  alt="Vista previa de categoria"
-                  className="max-h-full w-full object-contain"
-                  src={resolveImageSrc(image)}
-                />
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                className="inline-flex min-h-12 flex-1 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-                disabled={isSaving}
-                type="submit"
-              >
-                {isSaving ? 'GUARDANDO CATEGORIA...' : 'CREAR CATEGORIA'}
-              </button>
-            </div>
-          </form>
-          </article>
-
-          <article className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
-            <div className="grid h-full place-items-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
-                  Vista previa
-                </p>
-                <h3 className="mt-3 text-xl font-bold text-slate-900">
-                  {editingCategoryId ? 'Actualiza tu categoria' : 'Crea una nueva categoria'}
-                </h3>
-                <p className="mt-3 max-w-md text-sm leading-7 text-slate-500">
-                  Agrega una imagen representativa y un nombre claro para mejorar la organización visual del catálogo.
-                </p>
-                {image ? (
-                  <div className="mx-auto mt-6 grid h-52 max-w-sm place-items-center overflow-hidden rounded-[24px] border border-slate-200 bg-white p-5">
-                    <img
-                      alt="Vista previa de categoria"
-                      className="max-h-full w-full object-contain"
-                      src={resolveImageSrc(image)}
-                    />
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </article>
-        </section>
-      ) : (
-        <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">
+      <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">
           <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
@@ -303,8 +216,94 @@ export function CategoriesPage({
               </span>
             </div>
           ) : null}
+      </section>
+
+      <EditSheetModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        subtitle="Crea una categoria sin salir del listado principal."
+        title="Crear categoria"
+        widthClassName="max-w-4xl"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeCreateModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !name.trim() || !image}
+              form="create-category-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO CATEGORIA...' : 'CREAR CATEGORIA'}
+            </button>
+          </div>
+        }
+      >
+        <section className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+          <article className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+            <div className="mb-5">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
+                Nueva categoria
+              </p>
+              <h3 className="text-xl font-bold text-slate-900">Agregar categoria</h3>
+            </div>
+
+            <form className="grid gap-4" id="create-category-form" onSubmit={handleSubmit}>
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Nombre de la categoria
+                <input
+                  autoFocus
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Ej. Escolar"
+                  required
+                  type="text"
+                  value={name}
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold text-slate-700">
+                Imagen de la categoria
+                <input
+                  accept="image/png,image/jpeg,image/webp"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                  onChange={(event) => void handleImageChange(event)}
+                  required={!image}
+                  type="file"
+                />
+              </label>
+            </form>
+          </article>
+
+          <article className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+            <div className="grid h-full place-items-center rounded-[22px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
+                  Vista previa
+                </p>
+                <h3 className="mt-3 text-xl font-bold text-slate-900">Crea una nueva categoria</h3>
+                <p className="mt-3 max-w-md text-sm leading-7 text-slate-500">
+                  Agrega una imagen representativa y un nombre claro para mejorar la organización visual del catálogo.
+                </p>
+                {image ? (
+                  <div className="mx-auto mt-6 grid h-52 max-w-sm place-items-center overflow-hidden rounded-[24px] border border-slate-200 bg-white p-5">
+                    <img
+                      alt="Vista previa de categoria"
+                      className="max-h-full w-full object-contain"
+                      src={resolveImageSrc(image)}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </article>
         </section>
-      )}
+      </EditSheetModal>
 
       <EditSheetModal
         isOpen={editingCategoryId !== null}

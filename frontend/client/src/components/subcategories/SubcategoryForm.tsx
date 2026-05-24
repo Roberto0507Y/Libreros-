@@ -5,6 +5,7 @@ import type { CatalogOption } from '../../domain/types';
 type SubcategoryFormProps = {
   categories: CatalogOption[];
   categoryId: string;
+  formId?: string;
   isSaving: boolean;
   name: string;
   onCategoryChange: (event: ChangeEvent<HTMLSelectElement>) => void;
@@ -12,11 +13,13 @@ type SubcategoryFormProps = {
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   status: string;
   onStatusChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  showSubmit?: boolean;
 };
 
 export function SubcategoryForm({
   categories,
   categoryId,
+  formId,
   isSaving,
   name,
   onCategoryChange,
@@ -24,6 +27,7 @@ export function SubcategoryForm({
   onStatusChange,
   onSubmit,
   status,
+  showSubmit = true,
 }: SubcategoryFormProps) {
   const hasNameError = !name.trim();
   const hasCategoryError = !categoryId;
@@ -40,7 +44,7 @@ export function SubcategoryForm({
         </p>
       </div>
 
-      <form className="grid gap-5" onSubmit={onSubmit}>
+      <form className="grid gap-5" id={formId} onSubmit={onSubmit}>
         <label className="grid gap-2 text-sm font-semibold text-slate-700">
           Nombre de la subcategoria
           <input
@@ -96,13 +100,15 @@ export function SubcategoryForm({
           </select>
         </label>
 
-        <button
-          className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
-          disabled={isSaving || hasNameError || hasCategoryError}
-          type="submit"
-        >
-          {isSaving ? 'GUARDANDO SUBCATEGORIA...' : 'GUARDAR SUBCATEGORIA'}
-        </button>
+        {showSubmit ? (
+          <button
+            className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSaving || hasNameError || hasCategoryError}
+            type="submit"
+          >
+            {isSaving ? 'GUARDANDO SUBCATEGORIA...' : 'GUARDAR SUBCATEGORIA'}
+          </button>
+        ) : null}
       </form>
     </section>
   );

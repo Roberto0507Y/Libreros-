@@ -42,6 +42,7 @@ export function BrandsPage({
   onDelete,
   onUpdate,
 }: BrandsPageProps) {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -116,6 +117,7 @@ export function BrandsPage({
     await onCreate({ name, image });
     setName('');
     setImage('');
+    setIsCreateModalOpen(false);
     setLocalMessage({
       tone: 'success',
       text: 'Marca creada correctamente.',
@@ -185,6 +187,13 @@ export function BrandsPage({
     setImageFilter('all');
   };
 
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setName('');
+    setImage('');
+    setIsDragActive(false);
+  };
+
   const handleCreateDrop = async (file: File | null) => {
     setIsDragActive(false);
     await consumeFile(file, 'create');
@@ -211,6 +220,28 @@ export function BrandsPage({
           Catalogo de marcas
         </p>
         <h2 className="m-0 text-2xl font-bold text-slate-900">Crea y administra tus marcas</h2>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button
+            className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition"
+            onClick={() => setSearchQuery('')}
+            type="button"
+          >
+            Marcas creadas
+          </button>
+          <button
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            onClick={() => {
+              setName('');
+              setImage('');
+              setIsDragActive(false);
+              setLocalMessage(null);
+              setIsCreateModalOpen(true);
+            }}
+            type="button"
+          >
+            Crear marca
+          </button>
+        </div>
       </section>
 
       {localMessage ? (
@@ -225,19 +256,7 @@ export function BrandsPage({
         </div>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[400px_minmax(0,1fr)]">
-        <BrandForm
-          image={image}
-          isDragActive={isDragActive}
-          isSaving={isSaving}
-          name={name}
-          onDropFile={(file) => void handleCreateDrop(file)}
-          onDragStateChange={setIsDragActive}
-          onImageChange={(event) => void handleImageChange(event)}
-          onNameChange={handleNameChange}
-          onSubmit={handleSubmit}
-        />
-
+      <section>
         <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
           <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
@@ -296,6 +315,50 @@ export function BrandsPage({
           </div>
         </article>
       </section>
+
+      <EditSheetModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        subtitle="Crea una marca sin salir del listado principal."
+        title="Crear marca"
+        widthClassName="max-w-4xl"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeCreateModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !name.trim()}
+              form="create-brand-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO MARCA...' : 'CREAR MARCA'}
+            </button>
+          </div>
+        }
+      >
+        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            <BrandForm
+              image={image}
+              isDragActive={isDragActive}
+              isSaving={isSaving}
+              name={name}
+              onDropFile={(file) => void handleCreateDrop(file)}
+              onDragStateChange={setIsDragActive}
+              onImageChange={(event) => void handleImageChange(event)}
+              onNameChange={handleNameChange}
+              onSubmit={handleSubmit}
+            />
+          </div>
+          <ImagePreview image={image} label="Vista previa" name={name} />
+        </div>
+      </EditSheetModal>
 
       <EditSheetModal
         isOpen={editingBrandId !== null}

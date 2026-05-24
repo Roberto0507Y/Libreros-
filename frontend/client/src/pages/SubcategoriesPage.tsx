@@ -25,7 +25,7 @@ export function SubcategoriesPage({
   onUpdate,
   subcategories,
 }: SubcategoriesPageProps) {
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState('activa');
@@ -64,7 +64,7 @@ export function SubcategoriesPage({
     setLocalMessage('');
     await onCreate({ name, categoryId: Number(categoryId) });
     resetForm();
-    setActiveTab('list');
+    setIsCreateModalOpen(false);
   };
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +105,11 @@ export function SubcategoriesPage({
     setEditCategoryId('');
   };
 
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    resetForm();
+  };
+
   const handleUnavailableDelete = (subcategory: SubcategoryOption) => {
     const confirmed = window.confirm(
       `¿Deseas eliminar ${subcategory.nombre}? La eliminacion de subcategorias aun no esta conectada en el backend.`,
@@ -136,25 +141,17 @@ export function SubcategoriesPage({
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'list'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
-            onClick={() => setActiveTab('list')}
+            className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition"
+            onClick={() => setSearchQuery('')}
             type="button"
           >
             Subcategorias creadas
           </button>
           <button
-            className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-              activeTab === 'create'
-                ? 'bg-blue-600 text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)]'
-                : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-            }`}
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             onClick={() => {
               resetForm();
-              setActiveTab('create');
+              setIsCreateModalOpen(true);
             }}
             type="button"
           >
@@ -169,63 +166,7 @@ export function SubcategoriesPage({
         </div>
       ) : null}
 
-      {activeTab === 'create' ? (
-        <section className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
-          <SubcategoryForm
-            categories={categories}
-            categoryId={categoryId}
-            isSaving={isSaving}
-            name={name}
-            onCategoryChange={handleCategoryChange}
-            onNameChange={handleNameChange}
-            onStatusChange={handleStatusChange}
-            onSubmit={handleSubmit}
-            status={status}
-          />
-
-          <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
-            <div className="grid h-full place-items-center rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-              <div className="max-w-lg">
-                <span className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-[0_18px_30px_rgba(37,99,235,0.22)]">
-                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24">
-                    <path
-                      d="M4 7.5 12 3l8 4.5m-16 0 8 4.5m-8-4.5V16.5L12 21m8-13.5V16.5L12 21m0-9V21"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.8"
-                    />
-                  </svg>
-                </span>
-                <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
-                  Vista previa
-                </p>
-                <h3 className="mt-3 text-2xl font-bold text-slate-900">
-                  Prepara una subcategoria clara y ordenada
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-slate-500">
-                  Usa nombres especificos y asocialos a su categoria correcta para mantener un catalogo profesional y facil de explorar.
-                </p>
-
-                <div className="mt-8 rounded-[24px] border border-slate-200 bg-white p-5 text-left shadow-sm">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">
-                    {categoryId
-                      ? categories.find((category) => category.id === Number(categoryId))?.nombre ?? 'Categoria'
-                      : 'Categoria padre'}
-                  </span>
-                  <h4 className="mt-4 text-lg font-bold text-slate-900">
-                    {name.trim() || 'Nombre de la subcategoria'}
-                  </h4>
-                  <p className="mt-3 text-sm text-slate-500">
-                    Estado visual: {status === 'activa' ? 'Activa' : 'Inactiva'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </article>
-        </section>
-      ) : (
-        <section className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">
+      <section className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)] md:p-6">
           <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
@@ -278,8 +219,93 @@ export function SubcategoriesPage({
               />
             ) : null}
           </div>
+      </section>
+
+      <EditSheetModal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        subtitle="Crea una subcategoria sin salir del listado principal."
+        title="Crear subcategoria"
+        widthClassName="max-w-5xl"
+        footer={
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              onClick={closeCreateModal}
+              type="button"
+            >
+              Cancelar
+            </button>
+            <button
+              className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={isSaving || !name.trim() || !categoryId}
+              form="create-subcategory-form"
+              type="submit"
+            >
+              {isSaving ? 'GUARDANDO SUBCATEGORIA...' : 'GUARDAR SUBCATEGORIA'}
+            </button>
+          </div>
+        }
+      >
+        <section className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
+          <div>
+            <SubcategoryForm
+              categories={categories}
+              categoryId={categoryId}
+              formId="create-subcategory-form"
+              isSaving={isSaving}
+              name={name}
+              onCategoryChange={handleCategoryChange}
+              onNameChange={handleNameChange}
+              onStatusChange={handleStatusChange}
+              onSubmit={handleSubmit}
+              showSubmit={false}
+              status={status}
+            />
+          </div>
+
+          <article className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.04)]">
+            <div className="grid h-full place-items-center rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+              <div className="max-w-lg">
+                <span className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-[0_18px_30px_rgba(37,99,235,0.22)]">
+                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24">
+                    <path
+                      d="M4 7.5 12 3l8 4.5m-16 0 8 4.5m-8-4.5V16.5L12 21m8-13.5V16.5L12 21m0-9V21"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1.8"
+                    />
+                  </svg>
+                </span>
+                <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.28em] text-blue-600">
+                  Vista previa
+                </p>
+                <h3 className="mt-3 text-2xl font-bold text-slate-900">
+                  Prepara una subcategoria clara y ordenada
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-500">
+                  Usa nombres especificos y asocialos a su categoria correcta para mantener un catalogo profesional y facil de explorar.
+                </p>
+
+                <div className="mt-8 rounded-[24px] border border-slate-200 bg-white p-5 text-left shadow-sm">
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-200">
+                    {categoryId
+                      ? categories.find((category) => category.id === Number(categoryId))?.nombre ?? 'Categoria'
+                      : 'Categoria padre'}
+                  </span>
+                  <h4 className="mt-4 text-lg font-bold text-slate-900">
+                    {name.trim() || 'Nombre de la subcategoria'}
+                  </h4>
+                  <p className="mt-3 text-sm text-slate-500">
+                    Estado visual: {status === 'activa' ? 'Activa' : 'Inactiva'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
         </section>
-      )}
+      </EditSheetModal>
 
       <EditSheetModal
         isOpen={editingSubcategoryId !== null}
