@@ -33,7 +33,11 @@ export function PosCart({
   total,
 }: PosCartProps) {
   return (
-    <aside className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_54px_rgba(15,23,42,0.08)]">
+    <aside
+      className={`flex flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_24px_54px_rgba(15,23,42,0.08)] ${
+        isCompact ? 'h-full' : 'max-h-[calc(100vh-7rem)]'
+      }`}
+    >
       <div className="border-b border-slate-200 px-5 py-5">
         <div className="flex items-center gap-3">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-950 text-white shadow-[0_12px_24px_rgba(15,23,42,0.18)]">
@@ -51,7 +55,11 @@ export function PosCart({
         </div>
       </div>
 
-      <div className={`flex-1 space-y-4 overflow-y-auto px-5 py-5 ${isCompact ? 'max-h-[48vh]' : 'min-h-[240px]'}`}>
+      <div
+        className={`min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 ${
+          isCompact ? 'max-h-[48vh]' : ''
+        }`}
+      >
         {!items.length ? (
           <div className="grid min-h-[240px] place-items-center rounded-[26px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
             <div>
