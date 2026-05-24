@@ -5,6 +5,7 @@ type NewCustomerFormState = {
   firstName: string;
   lastName: string;
   nit: string;
+  phone: string;
 };
 
 type NewCustomerFormProps = {
@@ -63,6 +64,13 @@ export function NewCustomerForm({
           placeholder="Opcional"
           type="email"
           value={form.email}
+        />
+        <Input
+          label="Teléfono"
+          onChange={(event) => onChange('phone', event.target.value)}
+          placeholder="Opcional"
+          value={form.phone}
+          wrapperClassName="md:col-span-2"
         />
       </div>
 

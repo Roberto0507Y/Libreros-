@@ -231,6 +231,8 @@ export type SalesHistoryProduct = {
 export type SalesHistorySale = {
   id: number;
   fecha: string;
+  origen: 'caja' | 'en_linea';
+  origenLabel: string;
   clienteNombre: string;
   nit: string;
   metodoPago: 'efectivo' | 'tarjeta' | 'transferencia';

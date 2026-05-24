@@ -16,6 +16,11 @@ const paymentTone = {
   transferencia: 'bg-amber-50 text-amber-700',
 } as const;
 
+const sourceTone = {
+  caja: 'bg-slate-100 text-slate-700',
+  en_linea: 'bg-violet-50 text-violet-700',
+} as const;
+
 export function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailModalProps) {
   if (!sale) {
     return null;
@@ -27,7 +32,7 @@ export function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailModalProps)
       onClose={onClose}
       size="xl"
       subtitle="Revisa el detalle completo de la venta seleccionada."
-      title={`Venta #${sale.id}`}
+      title={`${sale.origen === 'en_linea' ? 'Pedido' : 'Venta'} #${sale.id}`}
     >
       <div className="grid gap-6 px-6 py-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -69,7 +74,12 @@ export function SaleDetailModal({ isOpen, onClose, sale }: SaleDetailModalProps)
                 <strong className="mt-1 block text-sm text-slate-950">{dateTime.format(new Date(sale.fecha))}</strong>
               </div>
             </div>
-            <p className="mt-3 text-sm text-slate-500">Cajero: {sale.cajero}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+              <span>{sale.origen === 'en_linea' ? 'Registrado desde tienda online' : `Cajero: ${sale.cajero}`}</span>
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${sourceTone[sale.origen]}`}>
+                {sale.origenLabel}
+              </span>
+            </div>
           </article>
 
           <article className="rounded-[24px] border border-slate-200 bg-slate-950 p-4 text-white">

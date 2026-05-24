@@ -14,6 +14,11 @@ const paymentBadgeClass = {
   transferencia: 'bg-amber-50 text-amber-700',
 } as const;
 
+const sourceBadgeClass = {
+  caja: 'bg-slate-100 text-slate-700',
+  en_linea: 'bg-violet-50 text-violet-700',
+} as const;
+
 export function SalesHistoryTable({ onSelectSale, sales }: SalesHistoryTableProps) {
   return (
     <>
@@ -25,6 +30,7 @@ export function SalesHistoryTable({ onSelectSale, sales }: SalesHistoryTableProp
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hora</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cliente</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">NIT / CF</th>
+                <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Origen</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Método</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Productos</th>
                 <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Total</th>
@@ -42,6 +48,11 @@ export function SalesHistoryTable({ onSelectSale, sales }: SalesHistoryTableProp
                     <span className="mt-1 block text-xs text-slate-500">Venta #{sale.id}</span>
                   </td>
                   <td className="px-5 py-5 text-sm text-slate-600">{sale.nit || 'CF'}</td>
+                  <td className="px-5 py-5">
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${sourceBadgeClass[sale.origen]}`}>
+                      {sale.origenLabel}
+                    </span>
+                  </td>
                   <td className="px-5 py-5">
                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${paymentBadgeClass[sale.metodoPago]}`}>
                       {sale.metodoPago}
@@ -89,6 +100,12 @@ export function SalesHistoryTable({ onSelectSale, sales }: SalesHistoryTableProp
               </div>
               <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${paymentBadgeClass[sale.metodoPago]}`}>
                 {sale.metodoPago}
+              </span>
+            </div>
+
+            <div className="mt-3">
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${sourceBadgeClass[sale.origen]}`}>
+                {sale.origenLabel}
               </span>
             </div>
 

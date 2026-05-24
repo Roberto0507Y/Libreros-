@@ -22,6 +22,7 @@ type NewCustomerFormState = {
   firstName: string;
   lastName: string;
   nit: string;
+  phone: string;
 };
 
 type CheckoutModalProps = {
@@ -171,7 +172,7 @@ export function CheckoutModal({
                 />
                 <CustomerTypeCard
                   active={customerMode === 'nit'}
-                  description="Busca un cliente existente por NIT, nombre o teléfono y asígnalo a la venta."
+                  description="Busca al cliente por NIT. Si no existe, créalo rápido sin salir de caja."
                   icon={UserRound}
                   label="Cliente con NIT"
                   onClick={() => onCustomerModeChange('nit')}
@@ -195,7 +196,7 @@ export function CheckoutModal({
                     <input
                       className="h-13 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
                       onChange={(event) => onCustomerSearchChange(event.target.value)}
-                      placeholder="Buscar por NIT, nombre o teléfono..."
+                      placeholder="Buscar cliente por NIT..."
                       type="search"
                       value={customerSearch}
                     />
@@ -236,13 +237,18 @@ export function CheckoutModal({
                   ) : null}
 
                   {showNewCustomerForm ? (
-                    <NewCustomerForm
-                      errorMessage={newCustomerError}
-                      form={newCustomerForm}
-                      isSaving={isCreatingCustomer}
-                      onChange={onNewCustomerChange}
-                      onSubmit={onCreateCustomer}
-                    />
+                    <div className="grid gap-4">
+                      <div className="rounded-[22px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        No encontramos ese NIT. Puedes crear el cliente aquí mismo y continuar con la venta.
+                      </div>
+                      <NewCustomerForm
+                        errorMessage={newCustomerError}
+                        form={newCustomerForm}
+                        isSaving={isCreatingCustomer}
+                        onChange={onNewCustomerChange}
+                        onSubmit={onCreateCustomer}
+                      />
+                    </div>
                   ) : null}
                 </div>
               )}

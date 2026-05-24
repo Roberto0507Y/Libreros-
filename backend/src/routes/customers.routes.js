@@ -410,8 +410,30 @@ router.patch('/me', async (req, res, next) => {
 
 router.get('/search', async (req, res, next) => {
   const rawQuery = String(req.query.q ?? '').trim();
+  const mode = String(req.query.mode ?? 'all')
+    .trim()
+    .toLowerCase();
+  const normalizedQuery = normalizeNit(rawQuery);
 
   try {
+    if (mode === 'nit') {
+      const rows = await query(
+        `
+          ${customerSelect}
+          WHERE
+            ? = ''
+            OR UPPER(COALESCE(nit, '')) LIKE ?
+          ORDER BY nombres, apellidos
+          LIMIT 20
+        `,
+        [normalizedQuery, `%${normalizedQuery}%`],
+      );
+
+      return res.json({
+        customers: rows,
+      });
+    }
+
     const rows = await query(
       `
         ${customerSelect}

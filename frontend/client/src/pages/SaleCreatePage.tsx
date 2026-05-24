@@ -34,7 +34,7 @@ type SaleCreatePageProps = {
     paymentReference?: string;
     items: Array<{ productId: number; quantity: number }>;
   }) => Promise<void>;
-  onSearchCustomers: (query: string) => Promise<CustomerItem[]>;
+  onSearchCustomers: (query: string, mode?: 'all' | 'nit') => Promise<CustomerItem[]>;
   products: ProductItem[];
 };
 
@@ -48,6 +48,7 @@ type NewCustomerFormState = {
   firstName: string;
   lastName: string;
   nit: string;
+  phone: string;
 };
 
 const DEFAULT_PAYMENT_METHOD: PaymentMethod = 'efectivo';
@@ -69,6 +70,7 @@ const emptyNewCustomerForm: NewCustomerFormState = {
   firstName: '',
   lastName: '',
   nit: '',
+  phone: '',
 };
 
 export function SaleCreatePage({
@@ -141,7 +143,7 @@ export function SaleCreatePage({
     const timeout = window.setTimeout(async () => {
       setIsSearchingCustomers(true);
       try {
-        const results = await onSearchCustomers(query);
+        const results = await onSearchCustomers(query, 'nit');
         if (active) {
           setCustomerSearchResults(results);
         }
@@ -402,6 +404,7 @@ export function SaleCreatePage({
       const createdCustomer = await onCreateCustomer({
         fullName: `${newCustomerForm.firstName.trim()} ${newCustomerForm.lastName.trim()}`,
         nit: newCustomerForm.nit.trim().toUpperCase(),
+        phone: newCustomerForm.phone.trim(),
         email: newCustomerForm.email.trim(),
       });
 
@@ -739,12 +742,13 @@ export function SaleCreatePage({
           }
         }}
         onCustomerSearchChange={(value) => {
-          setCustomerSearch(value);
+          const normalizedValue = value.toUpperCase();
+          setCustomerSearch(normalizedValue);
           setSelectedClient(null);
           setNewCustomerError('');
           setNewCustomerForm((current) => ({
             ...current,
-            nit: value.toUpperCase(),
+            nit: normalizedValue,
           }));
         }}
         onCustomerSelect={(customer) => {

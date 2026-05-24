@@ -13,6 +13,8 @@ type SalesHistoryApiResponse = {
   ventas: Array<{
     id: number;
     fecha: string;
+    origen: 'caja' | 'en_linea';
+    origenLabel: string;
     cliente_nombre: string;
     nit: string;
     metodo_pago: 'efectivo' | 'tarjeta' | 'transferencia';
@@ -70,6 +72,8 @@ export async function fetchSalesHistory(
     ventas: payload.ventas.map((sale) => ({
       id: Number(sale.id),
       fecha: sale.fecha,
+      origen: sale.origen,
+      origenLabel: sale.origenLabel,
       clienteNombre: sale.cliente_nombre,
       nit: sale.nit,
       metodoPago: sale.metodo_pago,

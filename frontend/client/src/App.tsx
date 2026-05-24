@@ -307,10 +307,10 @@ export default function App() {
     }
   };
 
-  const handleSearchCustomers = async (queryText: string) => {
+  const handleSearchCustomers = async (queryText: string, mode: 'all' | 'nit' = 'all') => {
     if (!session) return [];
 
-    const payload = await searchCustomers(session.token, queryText);
+    const payload = await searchCustomers(session.token, queryText, mode);
     return payload.customers;
   };
 

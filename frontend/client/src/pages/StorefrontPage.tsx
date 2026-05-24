@@ -679,9 +679,17 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
   }, [catalogAvailability, catalogBrandFilter, catalogCategoryFilter, catalogSearch, catalogSort, products]);
   const selectedProduct = products.find((product) => product.id === selectedProductId) ?? null;
   const detailContextLogo =
-    productBackView === 'category-products' ? selectedCategory?.imagen : selectedBrand?.imagen;
+    productBackView === 'category-products'
+      ? selectedCategory?.imagen
+      : productBackView === 'brand-products'
+        ? selectedBrand?.imagen
+        : null;
   const detailContextAlt =
-    productBackView === 'category-products' ? selectedCategory?.nombre : selectedBrand?.nombre;
+    productBackView === 'category-products'
+      ? selectedCategory?.nombre
+      : productBackView === 'brand-products'
+        ? selectedBrand?.nombre
+        : null;
   const cartItems = useMemo(
     () =>
       cart
@@ -1523,18 +1531,19 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
     backView: 'brand-products' | 'category-products' | 'all-products' = 'brand-products',
   ) => {
     const url = new URL(window.location.href);
+    const product = products.find((item) => item.id === productId);
     url.searchParams.set('detailView', 'product-detail');
     url.searchParams.set('productId', String(productId));
     url.searchParams.set('backView', backView);
 
-    if (selectedBrandId) {
-      url.searchParams.set('brandId', String(selectedBrandId));
+    if (backView === 'brand-products' && product?.brandId) {
+      url.searchParams.set('brandId', String(product.brandId));
     } else {
       url.searchParams.delete('brandId');
     }
 
-    if (selectedCategoryId) {
-      url.searchParams.set('categoryId', String(selectedCategoryId));
+    if (backView === 'category-products' && product?.categoryId) {
+      url.searchParams.set('categoryId', String(product.categoryId));
     } else {
       url.searchParams.delete('categoryId');
     }
@@ -2379,13 +2388,23 @@ export function StorefrontPage({ onLogin, onLogout, session = null }: Storefront
                     <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       <span>Inicio</span>
                       <span>→</span>
-                      <span>{productBackView === 'category-products' ? 'Categoría' : 'Marca'}</span>
-                      <span>→</span>
-                      <span className="font-medium text-slate-700">
+                      <span>
                         {productBackView === 'category-products'
-                          ? selectedCategory?.nombre ?? 'Categoría'
-                          : selectedBrand?.nombre ?? 'Marca'}
+                          ? 'Categoría'
+                          : productBackView === 'brand-products'
+                            ? 'Marca'
+                            : 'Productos'}
                       </span>
+                      {productBackView !== 'all-products' ? (
+                        <>
+                          <span>→</span>
+                          <span className="font-medium text-slate-700">
+                            {productBackView === 'category-products'
+                              ? selectedCategory?.nombre ?? 'Categoría'
+                              : selectedBrand?.nombre ?? 'Marca'}
+                          </span>
+                        </>
+                      ) : null}
                       <span>→</span>
                       <span className="max-w-[520px] truncate font-medium text-blue-900">
                         {selectedProduct?.nombre ?? 'Producto'}

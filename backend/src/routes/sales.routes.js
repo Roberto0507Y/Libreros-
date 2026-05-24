@@ -173,7 +173,7 @@ router.get('/historial', async (req, res, next) => {
       queryText,
     });
 
-    const [summaryRows, detailRows] = await Promise.all([
+    const [summaryRows, detailRows, onlineSummaryRows, onlineDetailRows] = await Promise.all([
       query(
         `
           SELECT
@@ -221,6 +221,97 @@ router.get('/historial', async (req, res, next) => {
         `,
         filters.params,
       ),
+      access.isRestricted
+        ? Promise.resolve([
+            {
+              total_vendido: 0,
+              cantidad_ventas: 0,
+              productos_vendidos: 0,
+              ventas_tarjeta: 0,
+            },
+          ])
+        : query(
+            `
+              SELECT
+                COALESCE(SUM(p.total), 0) AS total_vendido,
+                COUNT(DISTINCT p.id_pedido) AS cantidad_ventas,
+                COALESCE(SUM(pd.cantidad), 0) AS productos_vendidos,
+                COUNT(DISTINCT p.id_pedido) AS ventas_tarjeta
+              FROM pedidos p
+              LEFT JOIN clientes c ON c.id_cliente = p.id_cliente
+              LEFT JOIN pedidos_detalle pd ON pd.id_pedido = p.id_pedido
+              WHERE DATE(p.fecha) = ?
+                AND p.estado <> 'cancelado'
+                ${
+                  queryText
+                    ? `AND (
+                        CONCAT_WS(' ', COALESCE(c.nombres, ''), COALESCE(c.apellidos, '')) LIKE ?
+                        OR COALESCE(c.nit, '') LIKE ?
+                        OR EXISTS (
+                          SELECT 1
+                          FROM pedidos_detalle pd2
+                          INNER JOIN productos p2 ON p2.id_producto = pd2.id_producto
+                          WHERE pd2.id_pedido = p.id_pedido
+                            AND p2.nombre LIKE ?
+                        )
+                      )`
+                    : ''
+                }
+            `,
+            queryText
+              ? [requestedDate, `%${queryText}%`, `%${queryText}%`, `%${queryText}%`]
+              : [requestedDate],
+          ),
+      access.isRestricted
+        ? Promise.resolve([])
+        : query(
+            `
+              SELECT
+                p.id_pedido AS id,
+                p.fecha,
+                CONCAT_WS(' ', COALESCE(c.nombres, ''), COALESCE(c.apellidos, '')) AS cliente_nombre,
+                COALESCE(NULLIF(TRIM(c.nit), ''), 'CF') AS nit,
+                'tarjeta' AS metodo_pago,
+                (p.total - COALESCE(p.costo_envio, 0)) AS subtotal,
+                0 AS descuento,
+                p.total,
+                NULL AS monto_recibido,
+                0 AS cambio,
+                p.tracking_code AS referencia_pago,
+                p.estado_pedido AS estado,
+                'Tienda online' AS cajero,
+                pr.id_producto AS producto_id,
+                pr.nombre AS producto_nombre,
+                pd.cantidad,
+                pd.precio_unitario,
+                pd.subtotal AS subtotal_producto
+              FROM pedidos p
+              LEFT JOIN clientes c ON c.id_cliente = p.id_cliente
+              LEFT JOIN pedidos_detalle pd ON pd.id_pedido = p.id_pedido
+              LEFT JOIN productos pr ON pr.id_producto = pd.id_producto
+              WHERE DATE(p.fecha) = ?
+                AND p.estado <> 'cancelado'
+                ${
+                  queryText
+                    ? `AND (
+                        CONCAT_WS(' ', COALESCE(c.nombres, ''), COALESCE(c.apellidos, '')) LIKE ?
+                        OR COALESCE(c.nit, '') LIKE ?
+                        OR EXISTS (
+                          SELECT 1
+                          FROM pedidos_detalle pd2
+                          INNER JOIN productos p2 ON p2.id_producto = pd2.id_producto
+                          WHERE pd2.id_pedido = p.id_pedido
+                            AND p2.nombre LIKE ?
+                        )
+                      )`
+                    : ''
+                }
+              ORDER BY p.fecha DESC, p.id_pedido DESC, pd.id_pedido_detalle ASC
+            `,
+            queryText
+              ? [requestedDate, `%${queryText}%`, `%${queryText}%`, `%${queryText}%`]
+              : [requestedDate],
+          ),
     ]);
 
     const salesMap = new Map();
@@ -230,6 +321,8 @@ router.get('/historial', async (req, res, next) => {
         salesMap.set(row.id, {
           id: Number(row.id),
           fecha: row.fecha,
+          origen: 'caja',
+          origenLabel: 'Caja',
           cliente_nombre: row.cliente_nombre?.trim() || 'Consumidor Final',
           nit: normalizeNit(row.nit) || 'CF',
           metodo_pago: row.metodo_pago,
@@ -256,11 +349,52 @@ router.get('/historial', async (req, res, next) => {
       }
     }
 
+    for (const row of onlineDetailRows) {
+      const saleKey = `online-${row.id}`;
+
+      if (!salesMap.has(saleKey)) {
+        salesMap.set(saleKey, {
+          id: Number(row.id),
+          fecha: row.fecha,
+          origen: 'en_linea',
+          origenLabel: 'En línea',
+          cliente_nombre: row.cliente_nombre?.trim() || 'Consumidor Final',
+          nit: normalizeNit(row.nit) || 'CF',
+          metodo_pago: row.metodo_pago,
+          subtotal: Number(row.subtotal ?? 0),
+          descuento: Number(row.descuento ?? 0),
+          total: Number(row.total ?? 0),
+          monto_recibido: null,
+          cambio: 0,
+          referencia_pago: row.referencia_pago ?? null,
+          estado: row.estado,
+          cajero: 'Tienda online',
+          productos: [],
+        });
+      }
+
+      if (row.producto_id) {
+        salesMap.get(saleKey).productos.push({
+          producto_id: Number(row.producto_id),
+          nombre: row.producto_nombre,
+          cantidad: Number(row.cantidad ?? 0),
+          precio_unitario: Number(row.precio_unitario ?? 0),
+          subtotal: Number(row.subtotal_producto ?? 0),
+        });
+      }
+    }
+
     const summary = summaryRows[0] ?? {
       total_vendido: 0,
       cantidad_ventas: 0,
       productos_vendidos: 0,
       ventas_efectivo: 0,
+      ventas_tarjeta: 0,
+    };
+    const onlineSummary = onlineSummaryRows[0] ?? {
+      total_vendido: 0,
+      cantidad_ventas: 0,
+      productos_vendidos: 0,
       ventas_tarjeta: 0,
     };
 
@@ -272,13 +406,15 @@ router.get('/historial', async (req, res, next) => {
         rol: access.roleName,
       },
       resumen: {
-        total_vendido: Number(summary.total_vendido ?? 0),
-        cantidad_ventas: Number(summary.cantidad_ventas ?? 0),
-        productos_vendidos: Number(summary.productos_vendidos ?? 0),
+        total_vendido: Number(summary.total_vendido ?? 0) + Number(onlineSummary.total_vendido ?? 0),
+        cantidad_ventas: Number(summary.cantidad_ventas ?? 0) + Number(onlineSummary.cantidad_ventas ?? 0),
+        productos_vendidos: Number(summary.productos_vendidos ?? 0) + Number(onlineSummary.productos_vendidos ?? 0),
         ventas_efectivo: Number(summary.ventas_efectivo ?? 0),
-        ventas_tarjeta: Number(summary.ventas_tarjeta ?? 0),
+        ventas_tarjeta: Number(summary.ventas_tarjeta ?? 0) + Number(onlineSummary.ventas_tarjeta ?? 0),
       },
-      ventas: Array.from(salesMap.values()),
+      ventas: Array.from(salesMap.values()).sort(
+        (left, right) => new Date(right.fecha).getTime() - new Date(left.fecha).getTime(),
+      ),
     });
   } catch (error) {
     next(error);
